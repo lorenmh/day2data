@@ -2,31 +2,31 @@ from app import db, secret
 from datetime import datetime
 import os, binascii, hashlib
 
-'''
-   it is VERY important that the resources are saved immediately, otherwise the
-   res_id won't work properly and there will be collisions.  The res_id is so
-   that each resource will have an id relative to that owner or set.  For example,
-   we want the following url user/jim/valueset/1/1 referring to the valuedata
-   1 for valueset 1, INSTEAD OF user/jim/valueset/839/10425.  The first uses a
-   relative id, and the second uses an absolute row/pk id.  Using rel_id the URL id
-   will refer only to that set or owner, so there can be a user/jim/valueset/2/1, etc.
-'''
-
 class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(12), unique=True)
-    salt = db.Column(db.String(6))
     password = db.Column(db.String(64))
+    salt = db.Column(db.String(64))
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.save()
 
     def __init__(self, username, password):
         self.username = username
-        self.salt = User.create_salt()
         self.password = self.hash_password(password)
+        self.salt = User.create_salt()
+
+    def __repr__(self):
+        return "<User id:%d>" % self.id
 
     @staticmethod
     def create_salt():
-        return binascii.b2a_hex(os.urandom(3))
+        return binascii.b2a_hex(os.urandom(32))
 
     def hash_password(self, pswd):
         return hashlib.sha256(pswd + self.salt + secret).hexdigest()
@@ -39,12 +39,25 @@ class TimePoint(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     timestamp = db.Column(db.DateTime)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.save()
+
     def __init__(self, timestamp=datetime.now(), text=None):
         self.timestamp = timestamp
         self.text = text
 
-def res_set_count(model, set):
-    return model.query.filter_by(set=set).count()
+    def __repr__(self):
+        return "<TimePoint id:%d>" % self.id
+
+def next_res_id_for_data(mdl, set):
+    # finds the current max res_id for this set
+    max = db.session.query(db.func.max(mdl.res_id)).filter_by(set=set).scalar()
+    # a nifty way to return 1 if max is none, or otherwise to return max + 1
+    return max and max + 1 or 1
 
 class CountData(db.Model):
     __tablename__ = "countdata"
@@ -56,11 +69,21 @@ class CountData(db.Model):
     
     text = db.Column(db.Text, nullable=True)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_data(CountData, self.set)
+        self.save()
+
     def __init__(self, set, timestamp=datetime.now(), text=None):
         self.set = set
         self.timestamp = timestamp
         self.text = text
-        self.res_id = res_set_count(TimedData, set)
+
+    def __repr__(self):
+        return "<CountData id:%d countset.id:%d>" % (self.id, self.set)
 
 class ValueData(db.Model):
     __tablename__ = "valuedata"
@@ -74,12 +97,22 @@ class ValueData(db.Model):
 
     value = db.Column(db.Float, nullable=True)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_data(ValueData, self.set)
+        self.save()
+
     def __init__(self, set, timestamp=datetime.now(), text=None, value=None):
         self.set = set
         self.timestamp = timestamp
         self.text = text
         self.value = value
-        self.res_id = res_set_count(TimedData, set)
+
+    def __repr__(self):
+        return "<ValueData id:%d valueset.id:%d>" % (self.id, self.set)
 
 class TimedData(db.Model):
     __tablename__ = "timeddata"
@@ -92,15 +125,28 @@ class TimedData(db.Model):
     start = db.Column(db.Integer, db.ForeignKey('timepoint.id'), nullable=True)
     stop = db.Column(db.Integer, db.ForeignKey('timepoint.id'), nullable=True)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_data(TimedData, self.set)
+        self.save()
+
     def __init__(self, set, text=None, start=None, stop=None):
         self.set = set
         self.start = start
         self.stop = stop
         self.text = text
-        self.res_id = res_set_count(TimedData, set)
 
-def res_owner_count(model, owner):
-    return model.query.filter_by(owner=owner).count()
+    def __repr__(self):
+        return "<TimedData id:%d timedset.id:%d>" % (self.id, self.set)
+
+# each set should have relative resource ids (relative to owner)
+def next_res_id_for_set(mdl, owner):
+    max = db.session.query(db.func.max(mdl.res_id)).filter_by(owner=owner).scalar()
+    # a nifty way to return 1 if max is none, or otherwise to return max + 1
+    return max and max + 1 or 1
 
 class CountSet(db.Model):
     __tablename__ = "countset"
@@ -113,17 +159,27 @@ class CountSet(db.Model):
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_set(CountSet, self.owner)
+        self.save()
+
     def __init__(self, owner, title, timestamp=datetime.now(), text=None):
         self.owner = owner
         self.title = title
         self.timestamp = timestamp
         self.text = text
-        self.res_id = res_owner_count(CountSet, owner) + 1
+
+    def __repr__(self):
+        return "<CountSet id:%d owner.id:%d>" % (self.id, self.owner)
 
 class ValueSet(db.Model):
     __tablename__ = "valueset"
     id = db.Column(db.Integer, primary_key=True)
-    res_id = db.Column(db.Integer)
+
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     timestamp = db.Column(db.DateTime)
@@ -131,12 +187,22 @@ class ValueSet(db.Model):
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_set(ValueSet, self.owner)
+        self.save()
+
     def __init__(self, owner, title, timestamp=datetime.now(), text=None):
         self.owner = owner
         self.title = title
         self.timestamp = timestamp
         self.text = text
-        self.res_id = res_owner_count(ValueSet, owner) + 1
+
+    def __repr__(self):
+        return "<ValueSet id:%d owner.id:%d" % (self.id, self.owner)
 
 class TimedSet(db.Model):
     __tablename__ = "timedset"
@@ -149,9 +215,25 @@ class TimedSet(db.Model):
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
 
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_set(TimedSet, self.owner)
+        self.save()
+
     def __init__(self, owner, title, timestamp=datetime.now(), text=None):
         self.owner = owner
         self.title = title
         self.timestamp = timestamp
         self.text = text
-        self.res_id = res_owner_count(TimedSet, owner) + 1
+
+    def __repr__(self):
+        return "<TimedSet id:%d owner.id:%d>" % (self.id, self.owner)
+
+'''
+db.session.query(db.func.max(CountSet.id)).scalar()
+db.session.query(db.func.max(CountSet.id)).filter(CountSet.id == 1).scalar()
+db.session.query(db.func.max(CountSet.res_id)).filter_by(owner=1).scalar()
+'''
