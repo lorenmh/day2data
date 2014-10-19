@@ -1,0 +1,2 @@
+d2d.py
+- vars { 'DB_URI', 'SECRET_KEY', 'SECRET' }

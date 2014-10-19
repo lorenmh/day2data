@@ -1,0 +1,8 @@
+{
+  "name": "d2d",
+  "version": "0.0.1",
+  "description": "an application to store user data",
+  "dependencies": {
+    "less": "*"
+   }
+ }
