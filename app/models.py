@@ -53,11 +53,12 @@ class TimePoint(db.Model):
     def __repr__(self):
         return "<TimePoint id:%d>" % self.id
 
-def next_res_id_for_data(mdl, set):
     # finds the current max res_id for this set
-    max = db.session.query(db.func.max(mdl.res_id)).filter_by(set=set).scalar()
-    # a nifty way to return 1 if max is none, or otherwise to return max + 1
-    return max and max + 1 or 1
+def next_res_id_for_data(mdl, set):
+    last = db.session.query(mdl).filter_by(set=set).order_by("-id").first()
+    if last:
+        return last.res_id + 1
+    return 1
 
 class CountData(db.Model):
     __tablename__ = "countdata"
@@ -144,9 +145,10 @@ class TimedData(db.Model):
 
 # each set should have relative resource ids (relative to owner)
 def next_res_id_for_set(mdl, owner):
-    max = db.session.query(db.func.max(mdl.res_id)).filter_by(owner=owner).scalar()
-    # a nifty way to return 1 if max is none, or otherwise to return max + 1
-    return max and max + 1 or 1
+    last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
+    if last:
+        return last.res_id + 1
+    return 1
 
 class CountSet(db.Model):
     __tablename__ = "countset"
@@ -202,7 +204,7 @@ class ValueSet(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<ValueSet id:%d owner.id:%d" % (self.id, self.owner)
+        return "<ValueSet id:%d owner.id:%d>" % (self.id, self.owner)
 
 class TimedSet(db.Model):
     __tablename__ = "timedset"
@@ -231,9 +233,3 @@ class TimedSet(db.Model):
 
     def __repr__(self):
         return "<TimedSet id:%d owner.id:%d>" % (self.id, self.owner)
-
-'''
-db.session.query(db.func.max(CountSet.id)).scalar()
-db.session.query(db.func.max(CountSet.id)).filter(CountSet.id == 1).scalar()
-db.session.query(db.func.max(CountSet.res_id)).filter_by(owner=1).scalar()
-'''
