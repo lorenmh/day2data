@@ -143,9 +143,9 @@ class TimedData(db.Model):
     def __repr__(self):
         return "<TimedData id:%d timedset.id:%d>" % (self.id, self.set)
 
-# each set should have relative resource ids (relative to owner)
-def next_res_id_for_set(mdl, owner):
-    last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
+# each set should have relative resource ids (relative to record)
+def next_res_id_for_set(mdl, record):
+    last = db.session.query(mdl).filter_by(record=record).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -154,7 +154,7 @@ class CountSet(db.Model):
     __tablename__ = "countset"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
     timestamp = db.Column(db.DateTime)
 
@@ -166,23 +166,23 @@ class CountSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(CountSet, self.owner)
+        self.res_id = next_res_id_for_set(CountSet, self.record)
         self.save()
 
-    def __init__(self, owner, title, timestamp=datetime.now(), text=None):
-        self.owner = owner
+    def __init__(self, record, title, timestamp=datetime.now(), text=None):
+        self.record = record
         self.title = title
         self.timestamp = timestamp
         self.text = text
 
     def __repr__(self):
-        return "<CountSet id:%d owner.id:%d>" % (self.id, self.owner)
+        return "<CountSet id:%d record.id:%d>" % (self.id, self.record)
 
 class ValueSet(db.Model):
     __tablename__ = "valueset"
     id = db.Column(db.Integer, primary_key=True)
 
-    owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
     timestamp = db.Column(db.DateTime)
 
@@ -194,20 +194,54 @@ class ValueSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(ValueSet, self.owner)
+        self.res_id = next_res_id_for_set(ValueSet, self.record)
         self.save()
 
-    def __init__(self, owner, title, timestamp=datetime.now(), text=None):
-        self.owner = owner
+    def __init__(self, record, title, timestamp=datetime.now(), text=None):
+        self.record = record
         self.title = title
         self.timestamp = timestamp
         self.text = text
 
     def __repr__(self):
-        return "<ValueSet id:%d owner.id:%d>" % (self.id, self.owner)
+        return "<ValueSet id:%d record.id:%d>" % (self.id, self.record)
 
 class TimedSet(db.Model):
     __tablename__ = "timedset"
+    id = db.Column(db.Integer, primary_key=True)
+    res_id = db.Column(db.Integer)
+    record = db.Column(db.Integer, db.ForeignKey('record.id'))
+
+    timestamp = db.Column(db.DateTime)
+
+    title = db.Column(db.Text)
+    text = db.Column(db.Text, nullable=True)
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_set(TimedSet, self.record)
+        self.save()
+
+    def __init__(self, record, title, timestamp=datetime.now(), text=None):
+        self.record = record
+        self.title = title
+        self.timestamp = timestamp
+        self.text = text
+
+    def __repr__(self):
+        return "<TimedSet id:%d record.id:%d>" % (self.id, self.record)
+
+def next_res_id_for_record(mdl, owner):
+    last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
+    if last:
+        return last.res_id + 1
+    return 1
+
+class Record(db.Model):
+    __tablename__ = "record"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -222,7 +256,7 @@ class TimedSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(TimedSet, self.owner)
+        self.res_id = next_res_id_for_record(Record, self.owner)
         self.save()
 
     def __init__(self, owner, title, timestamp=datetime.now(), text=None):
@@ -232,4 +266,4 @@ class TimedSet(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<TimedSet id:%d owner.id:%d>" % (self.id, self.owner)
+        return "<Record id:%d owner.id:%d>" % (self.id, self.owner)
