@@ -1,4 +1,5 @@
 from app import app, db
+from serializers import *
 from models import *
 
 @app.route('/')
@@ -14,11 +15,14 @@ def login():
 # get: return login template?
 # post: attempt login
 @app.route('/api/login/')
+def api_login():
+    return ''
 
 # get: return user details
 # put / post: update user details
 @app.route('/api/u/<user_id>/')
 def api_user(user_id):
+    user = User.with_username(user_id)
     return ''
 
 # get: return all record

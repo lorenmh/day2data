@@ -23,6 +23,21 @@ tset.create()
 cset2 = CountSet(1, 'Second Count Set')
 cset2.create()
 
+'''
+from app.models import *
+from app.serializers import *
+u = User.query.get(1)
+user(u)
+r = Record.query.get(1)
+record(r)
+s = r.get_set_with_res_id(1)
+set(s)
+'''
+
+
+
+
+
 for i in range(10):
     rand = randrange(0,4)
     print "sleep %d" % rand

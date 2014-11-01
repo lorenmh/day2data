@@ -1,3 +1,4 @@
+# coding: utf-8
 from app import db, secret
 from datetime import datetime
 import os, binascii, hashlib, re
@@ -15,6 +16,8 @@ class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(16), unique=True)
+    timestamp = db.Column(db.DateTime)
+    about = db.Column(db.Text, nullable=True)
     password = db.Column(db.String(64))
     salt = db.Column(db.String(64))
 
@@ -31,10 +34,12 @@ class User(db.Model):
     def get_record_all(self):
         return Record.query.filter_by(set=self.id).all()
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, timestamp=datetime.utcnow(), about=None):
         self.username = username
         self.salt = User.create_salt()
         self.password = self.hash_password(password)
+        self.timestamp = timestamp
+        self.about = about
 
     def __repr__(self):
         return "<User id:%d>" % self.id
@@ -73,7 +78,7 @@ class TimePoint(db.Model):
     def create(self):
         self.save()
 
-    def __init__(self, timestamp=datetime.now(), text=None):
+    def __init__(self, timestamp=datetime.utcnow(), text=None):
         self.timestamp = timestamp
         self.text = text
 
@@ -105,7 +110,7 @@ class CountData(db.Model):
         self.res_id = next_res_id_for_data(CountData, self.set)
         self.save()
 
-    def __init__(self, set, timestamp=datetime.now(), text=None):
+    def __init__(self, set, timestamp=datetime.utcnow(), text=None):
         self.set = set
         self.timestamp = timestamp
         self.text = text
@@ -133,7 +138,7 @@ class ValueData(db.Model):
         self.res_id = next_res_id_for_data(ValueData, self.set)
         self.save()
 
-    def __init__(self, set, timestamp=datetime.now(), text=None, value=None):
+    def __init__(self, set, timestamp=datetime.utcnow(), text=None, value=None):
         self.set = set
         self.timestamp = timestamp
         self.text = text
@@ -192,8 +197,8 @@ class CountSet(db.Model):
     res_id = db.Column(db.Integer, nullable=True)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
-    unit_short = db.Column(db.String(12))
-    unit = db.Column(db.String(32))
+    unit_short = db.Column(db.String(12), nullable=True)
+    unit = db.Column(db.String(32), nullable=True)
 
     timestamp = db.Column(db.DateTime)
 
@@ -214,11 +219,14 @@ class CountSet(db.Model):
     def get_data_all(self):
         return CountData.query.filter_by(set=self.id).all()
 
-    def __init__(self, record, title, timestamp=datetime.now(), text=None):
+    def __init__(self, record, title, timestamp=datetime.utcnow(), text=None,
+            unit=None, unit_short=None):
         self.record = record
         self.title = title
         self.timestamp = timestamp
         self.text = text
+        self.unit = unit
+        self.unit_short = unit_short
 
     def __repr__(self):
         return "<CountSet id:%d record.id:%d>" % (self.id, self.record)
@@ -228,6 +236,9 @@ class ValueSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer, nullable=True)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
+
+    unit_short = db.Column(db.String(12))
+    unit = db.Column(db.String(32))
 
     timestamp = db.Column(db.DateTime)
 
@@ -248,11 +259,14 @@ class ValueSet(db.Model):
     def get_data_all(self):
         return ValueData.query.filter_by(set=self.id).all()
 
-    def __init__(self, record, title, timestamp=datetime.now(), text=None):
+    def __init__(self, record, title, timestamp=datetime.utcnow(), text=None,
+            unit=None, unit_short=None):
         self.record = record
         self.title = title
         self.timestamp = timestamp
         self.text = text
+        self.unit = unit
+        self.unit_short = unit_short
 
     def __repr__(self):
         return "<ValueSet id:%d record.id:%d>" % (self.id, self.record)
@@ -262,6 +276,9 @@ class TimedSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
+
+    unit_short = db.Column(db.String(12))
+    unit = db.Column(db.String(32))
 
     timestamp = db.Column(db.DateTime)
 
@@ -282,11 +299,14 @@ class TimedSet(db.Model):
     def get_data_all(self):
         return TimedData.query.filter_by(set=self.id).all()
 
-    def __init__(self, record, title, timestamp=datetime.now(), text=None):
+    def __init__(self, record, title, timestamp=datetime.utcnow(), text=None,
+            unit="seconds", unit_short="s"):
         self.record = record
         self.title = title
         self.timestamp = timestamp
         self.text = text
+        self.unit = unit
+        self.unit_short = unit_short
 
     def __repr__(self):
         return "<TimedSet id:%d record.id:%d>" % (self.id, self.record)
@@ -337,7 +357,7 @@ class Record(db.Model):
         return sorted(lst, key = lambda model_instance : model_instance.res_id)
 
     def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW['private'],
-            timestamp=datetime.now(), text=None):
+            timestamp=datetime.utcnow(), text=None):
         self.owner = owner
         self.title = title
         self.permissions_view = permissions_view
