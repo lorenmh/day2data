@@ -92,9 +92,8 @@ class TimePoint(db.Model):
     def create(self):
         self.save()
 
-    def __init__(self, timestamp=datetime.utcnow(), text=None):
+    def __init__(self, timestamp=datetime.utcnow()):
         self.timestamp = timestamp
-        self.text = text
 
     def __repr__(self):
         return "<TimePoint id:%d>" % self.id
@@ -130,7 +129,8 @@ class CountData(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<CountData id:%d set.id:%d>" % (self.id, self.set)
+        return "<CountData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+            self.res_id)
 
 class ValueData(db.Model):
     __tablename__ = "valuedata"
@@ -159,7 +159,8 @@ class ValueData(db.Model):
         self.value = value
 
     def __repr__(self):
-        return "<ValueData id:%d set.id:%d>" % (self.id, self.set)
+        return "<ValueData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+            self.res_id)
 
 class TimedData(db.Model):
     __tablename__ = "timeddata"
@@ -185,9 +186,49 @@ class TimedData(db.Model):
         self.start = start
         self.stop = stop
         self.text = text
-    
+
     def __repr__(self):
-        return "<TimedData id:%d set.id:%d>" % (self.id, self.set)
+        return "<TimedData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+            self.res_id)
+
+
+def next_res_id_for_choice(set):
+    last = Choice.query.filter_by(set=set).order_by("-id").first()
+    if last:
+        return last.res_id + 1
+    return 1
+
+class Choice(db.Model):
+    __tablename__ = "choice"
+    id = db.Column(db.Integer, primary_key=True)
+    res_id = db.Column(db.Integer)
+    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+    title = db.Column(db.String(32))
+
+    @staticmethod
+    def for_set(set):
+        return Choice.query.filter_by(set=set).all()
+
+    @staticmethod
+    def get(id):
+        Choice.query.get(id)
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_choice(self.set)
+        self.save()
+
+    def __init__(self, set, title):
+        self.set = set
+        self.title = title
+
+    def __repr__(self):
+        return "<Choice id:%d set.id:%d res_id:%d title:%s>" % (self.id,
+            self.set, self.res_id, self.title)
+
 
 class ChoiceData(db.Model):
     __tablename__ = "choicedata"
@@ -199,6 +240,7 @@ class ChoiceData(db.Model):
     
     text = db.Column(db.Text, nullable=True)
 
+    # will hold the res_id
     choice = db.Column(db.Integer)
 
     def save(self):
@@ -216,7 +258,8 @@ class ChoiceData(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<ChoiceData id:%d set.id:%d>" % (self.id, self.set)
+        return "<ChoiceData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+            self.res_id)
 
 
 # each set should have relative resource ids (relative to record)
@@ -282,7 +325,8 @@ class Set(db.Model):
         self.unit_short = unit_short
 
     def __repr__(self):
-        return "<Set id:%d record.id:%d>" % (self.id, self.record)
+        return "<Set id:%d record.id:%d res_id:%d type:%s>" % (self.id, 
+            self.record, self.res_id, DATA_TYPE_STR[self.type])
 
 def next_res_id_for_record(mdl, owner):
     last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
@@ -325,4 +369,5 @@ class Record(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<Record id:%d owner.id:%d>" % (self.id, self.owner)
+        return "<Record id:%d owner.id:%d res_id:%d>" % (self.id, self.owner,
+            self.res_id)

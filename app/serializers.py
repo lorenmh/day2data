@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from app.models import User, DATA_TYPE_INT, DATA_TYPE_STR
+from app.models import User, Choice, DATA_TYPE_INT, DATA_TYPE_STR
 
 def dt_to_seconds(dt):
     epoch = datetime.utcfromtimestamp(0)
@@ -28,44 +28,60 @@ def user_short(usr):
     }
     return srl
 
-def c_data_short(data):
+def count_data_short(data):
     srl = {
-        "id": data.id,
+        "id": data.res_id,
         "timestamp": dt_to_ms(data.timestamp)
     }
     return srl
 
-def v_data_short(data):
+def value_data_short(data):
     srl = {
-        "id": data.id,
+        "id": data.res_id,
         "timestamp": dt_to_ms(data.timestamp),
         "value": data.value
     }
     return srl
 
-def t_data_short(data):
+def timed_data_short(data):
     srl = {
-        "id": data.id,
+        "id": data.res_id,
         "start": dt_to_ms(data.start),
         "stop": dt_to_ms(data.stop)
     }
     return srl
 
+def choice_data_short(data):
+    srl = {
+        "id": data.res_id,
+        "choice": data.choice
+    }
+    return srl
+
+def choice_set_key(set):
+    choices = Choice.for_set(set.id)
+    key = {}
+    for choice in choices:
+        key[choice.res_id] = choice.title
+    return key
+
 def data_short_for_type(set):
     if set.type == DATA_TYPE_INT["count"]:
-        return [c_data_short(d) for d in set.get_data_all()]
+        return [count_data_short(d) for d in set.get_data_all()]
     elif set.type == DATA_TYPE_INT["value"]:
-        return [v_data_short(d) for d in set.get_data_all()]
+        return [value_data_short(d) for d in set.get_data_all()]
     elif set.type == DATA_TYPE_INT["timed"]:
-        return [t_data_short(d) for d in set.get_data_all()]
+        return [timed_data_short(d) for d in set.get_data_all()]
+    elif set.type == DATA_TYPE_INT["choice"]:
+        return [choice_data_short(d) for d in set.get_data_all()]
     else:
         return None
 
 def set(set):
-    srl = set_short(set)["set"]
-    srl["unit"] = set.unit
-    srl["unit_short"] = set.unit_short
-    srl["data"] = data_short_for_type(set)
+    srl = set_short(set)
+    srl["set"]["unit"] = set.unit
+    srl["set"]["unit_short"] = set.unit_short
+    srl["set"]["data"] = data_short_for_type(set)
     return srl
 
 
@@ -79,12 +95,16 @@ def set_short(set):
             "type": DATA_TYPE_STR[set.type]
         }
     }
+
+    if set.type == DATA_TYPE_INT["choice"]:
+        srl["set"]["key"] = choice_set_key(set)
+
     return srl
 
 
 def record(rcd):
-    srl = record_short(rcd)["record"]
-    srl["sets"] = [set_short(set) for set in rcd.get_set_all()]
+    srl = record_short(rcd)
+    srl["record"]["sets"] = [set_short(set) for set in rcd.get_set_all()]
     return srl
 
 def record_short(rcd):
