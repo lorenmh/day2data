@@ -37,3 +37,5 @@ Comprises: Record
 Will have all basic functionality; User can create and view data sets and records.  Will be able to add text, etc.
 ###Release 2
 User will be able to make each record private / public, (private default)
+###ChoiceSet
+Add a ChoiceSet with ChoiceData and a Choice table (with res\_ids), where only one of a certain set of choices can be selected.  Ex: 'Green', 'Yellow', 'Red'.  A person could record which color of stoplight they encounter while driving (stupid example, but it gets the point across).  This would allow data to be displayed in pie charts.
