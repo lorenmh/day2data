@@ -4,6 +4,7 @@ import os, binascii, hashlib, re
 
 VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
 VALID_USERNAME_RE = "^[\w\-]{3,16}$"
+VALID_UNIT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{1,10}$"
 
 PERMISSIONS_VIEW = {
     "private": 1,
@@ -79,7 +80,7 @@ class TimePoint(db.Model):
     def __repr__(self):
         return "<TimePoint id:%d>" % self.id
 
-    # finds the current max res_id for this set
+# finds the current max res_id for this set
 def next_res_id_for_data(mdl, set):
     last = db.session.query(mdl).filter_by(set=set).order_by("-id").first()
     if last:
@@ -191,6 +192,9 @@ class CountSet(db.Model):
     res_id = db.Column(db.Integer, nullable=True)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
+    unit_short = db.Column(db.String(12))
+    unit = db.Column(db.String(32))
+
     timestamp = db.Column(db.DateTime)
 
     title = db.Column(db.Text)
@@ -298,7 +302,7 @@ class Record(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
-    permission_view = db.Column(db.Integer)
+    permissions_view = db.Column(db.Integer)
 
     timestamp = db.Column(db.DateTime)
 
@@ -332,11 +336,11 @@ class Record(db.Model):
         lst = cs + vs + ts
         return sorted(lst, key = lambda model_instance : model_instance.res_id)
 
-    def __init__(self, owner, title, permission_view=PERMISSION_VIEW['private'],
+    def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW['private'],
             timestamp=datetime.now(), text=None):
         self.owner = owner
         self.title = title
-        self.permission_view = permission_view
+        self.permissions_view = permissions_view
         self.timestamp = timestamp
         self.text = text
 

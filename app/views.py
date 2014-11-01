@@ -1,4 +1,5 @@
-from models import User#, Data, CountData, IntegerData
+from app import app, db
+from models import *
 
 @app.route('/')
 def index():
