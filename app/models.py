@@ -1,11 +1,19 @@
 from app import db, secret
 from datetime import datetime
-import os, binascii, hashlib
+import os, binascii, hashlib, re
+
+VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
+VALID_USERNAME_RE = "^[\w\-]{3,16}$"
+
+PERMISSIONS_VIEW = {
+    "private": 1,
+    "public": 2
+}
 
 class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(12), unique=True)
+    username = db.Column(db.String(16), unique=True)
     password = db.Column(db.String(64))
     salt = db.Column(db.String(64))
 
@@ -16,6 +24,12 @@ class User(db.Model):
     def create(self):
         self.save()
 
+    def get_record_with_res_id(self, res_id):
+        return Record.query.filter_by(owner=self.id).filter_by(res_id=res_id).first()
+
+    def get_record_all(self):
+        return Record.query.filter_by(set=self.id).all()
+
     def __init__(self, username, password):
         self.username = username
         self.salt = User.create_salt()
@@ -23,6 +37,18 @@ class User(db.Model):
 
     def __repr__(self):
         return "<User id:%d>" % self.id
+
+    @staticmethod
+    def with_username(username):
+        return User.query.filter_by(username=username).first()
+
+    @staticmethod
+    def valid_password(pswd):
+        return re.match(VALID_PSWD_RE, pswd) != None
+
+    @staticmethod
+    def valid_username(username):
+        return re.match(VALID_USERNAME_RE, username) != None
 
     @staticmethod
     def create_salt():
@@ -151,15 +177,11 @@ def next_res_id_for_set(record):
     lst = []
     if (cs != None):
         lst.append(cs.res_id)
-    else:
-        lst.append(0)
     if (vs != None):
         lst.append(vs.res_id)
-    else:
-        lst.append(0)
     if (ts != None):
         lst.append(ts.res_id)
-    else:
+    if (cs == None or vs == None or ts == None):
         lst.append(0)
     return max(lst) + 1
 
@@ -181,6 +203,12 @@ class CountSet(db.Model):
     def create(self):
         self.res_id = next_res_id_for_set(self.record)
         self.save()
+
+    def get_data_with_res_id(self, res_id):
+        return CountData.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
+
+    def get_data_all(self):
+        return CountData.query.filter_by(set=self.id).all()
 
     def __init__(self, record, title, timestamp=datetime.now(), text=None):
         self.record = record
@@ -210,6 +238,12 @@ class ValueSet(db.Model):
         self.res_id = next_res_id_for_set(self.record)
         self.save()
 
+    def get_data_with_res_id(self, res_id):
+        return ValueData.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
+
+    def get_data_all(self):
+        return ValueData.query.filter_by(set=self.id).all()
+
     def __init__(self, record, title, timestamp=datetime.now(), text=None):
         self.record = record
         self.title = title
@@ -238,6 +272,12 @@ class TimedSet(db.Model):
         self.res_id = next_res_id_for_set(self.record)
         self.save()
 
+    def get_data_with_res_id(self, res_id):
+        return TimedData.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
+
+    def get_data_all(self):
+        return TimedData.query.filter_by(set=self.id).all()
+
     def __init__(self, record, title, timestamp=datetime.now(), text=None):
         self.record = record
         self.title = title
@@ -258,6 +298,7 @@ class Record(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    permission_view = db.Column(db.Integer)
 
     timestamp = db.Column(db.DateTime)
 
@@ -272,11 +313,30 @@ class Record(db.Model):
         self.res_id = next_res_id_for_record(Record, self.owner)
         self.save()
 
-    #def get_
+    def get_set_with_res_id(self, res_id):
+        cs = CountSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
+        if cs:
+            return cs
+        vs = ValueSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
+        if vs:
+            return vs
+        ts = TimedSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
+        if ts:
+            return ts
+        return None
 
-    def __init__(self, owner, title, timestamp=datetime.now(), text=None):
+    def get_set_all(self):
+        cs = CountSet.query.filter_by(record=self.id).all()
+        vs = ValueSet.query.filter_by(record=self.id).all()
+        ts = TimedSet.query.filter_by(record=self.id).all()
+        lst = cs + vs + ts
+        return sorted(lst, key = lambda model_instance : model_instance.res_id)
+
+    def __init__(self, owner, title, permission_view=PERMISSION_VIEW['private'],
+            timestamp=datetime.now(), text=None):
         self.owner = owner
         self.title = title
+        self.permission_view = permission_view
         self.timestamp = timestamp
         self.text = text
 
