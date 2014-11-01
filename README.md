@@ -30,3 +30,10 @@ Comprises: ValueSet, CountSet, TimedSet
 ##Records
 Corresponds to a 'record of data sets'.  This is really so that people can track multiple sets within one 'space' (ie, record).  They can then view or share these records.  Permissions will be tied to the record, depending on how the user sets it up.  
 Comprises: Record  
+
+#Update 10/31
+##Timelines
+###Release 1
+Will have all basic functionality; User can create and view data sets and records.  Will be able to add text, etc.
+###Release 2
+User will be able to make each record private / public, (private default)
