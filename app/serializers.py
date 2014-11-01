@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-from app.models import User
+from app.models import User, DATA_TYPE_INT, DATA_TYPE_STR
 
 def dt_to_seconds(dt):
     epoch = datetime.utcfromtimestamp(0)
@@ -28,7 +28,6 @@ def user_short(usr):
     }
     return srl
 
-
 def c_data_short(data):
     srl = {
         "id": data.id,
@@ -52,19 +51,21 @@ def t_data_short(data):
     }
     return srl
 
+def data_short_for_type(set):
+    if set.type == DATA_TYPE_INT["count"]:
+        return [c_data_short(d) for d in set.get_data_all()]
+    elif set.type == DATA_TYPE_INT["value"]:
+        return [v_data_short(d) for d in set.get_data_all()]
+    elif set.type == DATA_TYPE_INT["timed"]:
+        return [t_data_short(d) for d in set.get_data_all()]
+    else:
+        return None
+
 def set(set):
     srl = set_short(set)["set"]
     srl["unit"] = set.unit
     srl["unit_short"] = set.unit_short
-    if set.__tablename__ == "countset":
-        data = [c_data_short(d) for d in set.get_data_all()]
-    elif set.__tablename__ == "valueset":
-        data = [v_data_short(d) for d in set.get_data_all()]
-    elif set.__tablename__ == "timedset":
-        data = [t_data_short(d) for d in set.get_data_all()]
-    else:
-        data = None
-    srl["data"] = data
+    srl["data"] = data_short_for_type(set)
     return srl
 
 
@@ -75,7 +76,7 @@ def set_short(set):
             "title": set.title,
             "text": set.text,
             "timestamp": dt_to_ms(set.timestamp),
-            "type": set.__tablename__
+            "type": DATA_TYPE_STR[set.type]
         }
     }
     return srl
@@ -96,3 +97,4 @@ def record_short(rcd):
             "timestamp": dt_to_ms(rcd.timestamp)
         }
     }
+    return srl

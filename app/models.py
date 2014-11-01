@@ -7,6 +7,20 @@ VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
 VALID_USERNAME_RE = "^[\w\-]{3,16}$"
 VALID_UNIT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{1,10}$"
 
+DATA_TYPE_INT = {
+    "count": 1,
+    "value": 2,
+    "timed": 3,
+    "choice": 4
+}
+
+DATA_TYPE_STR = {
+    1: "count",
+    2: "value",
+    3: "timed",
+    4: "choice"
+}
+
 PERMISSIONS_VIEW = {
     "private": 1,
     "public": 2
@@ -96,7 +110,7 @@ class CountData(db.Model):
     __tablename__ = "countdata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('countset.id'))
+    set = db.Column(db.Integer, db.ForeignKey('set.id'))
 
     timestamp = db.Column(db.DateTime)
     
@@ -116,13 +130,13 @@ class CountData(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<CountData id:%d countset.id:%d>" % (self.id, self.set)
+        return "<CountData id:%d set.id:%d>" % (self.id, self.set)
 
 class ValueData(db.Model):
     __tablename__ = "valuedata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('valueset.id'))
+    set = db.Column(db.Integer, db.ForeignKey('set.id'))
     
     timestamp = db.Column(db.DateTime)
 
@@ -145,13 +159,13 @@ class ValueData(db.Model):
         self.value = value
 
     def __repr__(self):
-        return "<ValueData id:%d valueset.id:%d>" % (self.id, self.set)
+        return "<ValueData id:%d set.id:%d>" % (self.id, self.set)
 
 class TimedData(db.Model):
     __tablename__ = "timeddata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('timedset.id'))
+    set = db.Column(db.Integer, db.ForeignKey('set.id'))
     
     text = db.Column(db.Text, nullable=True)
 
@@ -171,110 +185,63 @@ class TimedData(db.Model):
         self.start = start
         self.stop = stop
         self.text = text
+    
+    def __repr__(self):
+        return "<TimedData id:%d set.id:%d>" % (self.id, self.set)
+
+class ChoiceData(db.Model):
+    __tablename__ = "choicedata"
+    id = db.Column(db.Integer, primary_key=True)
+    res_id = db.Column(db.Integer)
+    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+
+    timestamp = db.Column(db.DateTime)
+    
+    text = db.Column(db.Text, nullable=True)
+
+    choice = db.Column(db.Integer)
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def create(self):
+        self.res_id = next_res_id_for_data(ChoiceData, self.set)
+        self.save()
+
+    def __init__(self, set, choice, timestamp=datetime.utcnow(), text=None):
+        self.set = set
+        self.choice = choice
+        self.timestamp = timestamp
+        self.text = text
 
     def __repr__(self):
-        return "<TimedData id:%d timedset.id:%d>" % (self.id, self.set)
+        return "<ChoiceData id:%d set.id:%d>" % (self.id, self.set)
+
 
 # each set should have relative resource ids (relative to record)
 def next_res_id_for_set(record):
-    cs = CountSet.query.filter_by(record=record).order_by('-id').first()
-    vs = ValueSet.query.filter_by(record=record).order_by('-id').first()
-    ts = TimedSet.query.filter_by(record=record).order_by('-id').first()
-    lst = []
-    if (cs != None):
-        lst.append(cs.res_id)
-    if (vs != None):
-        lst.append(vs.res_id)
-    if (ts != None):
-        lst.append(ts.res_id)
-    if (cs == None or vs == None or ts == None):
-        lst.append(0)
-    return max(lst) + 1
+    last = Set.query.filter_by(record=record).order_by("-id").first()
+    if last:
+        return last.res_id + 1
+    return 1
 
-class CountSet(db.Model):
-    __tablename__ = "countset"
-    id = db.Column(db.Integer, primary_key=True)
-    res_id = db.Column(db.Integer, nullable=True)
-    record = db.Column(db.Integer, db.ForeignKey('record.id'))
+def data_model_from_type(type):
+    if type == DATA_TYPE_INT["count"]:
+        return CountData
+    elif type == DATA_TYPE_INT["value"]:
+        return ValueData
+    elif type == DATA_TYPE_INT["timed"]:
+        return TimedData
+    elif type == DATA_TYPE_INT["choice"]:
+        return ChoiceData
+    return None
 
-    unit_short = db.Column(db.String(12), nullable=True)
-    unit = db.Column(db.String(32), nullable=True)
-
-    timestamp = db.Column(db.DateTime)
-
-    title = db.Column(db.Text)
-    text = db.Column(db.Text, nullable=True)
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def create(self):
-        self.res_id = next_res_id_for_set(self.record)
-        self.save()
-
-    def get_data_with_res_id(self, res_id):
-        return CountData.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
-
-    def get_data_all(self):
-        return CountData.query.filter_by(set=self.id).all()
-
-    def __init__(self, record, title, timestamp=datetime.utcnow(), text=None,
-            unit=None, unit_short=None):
-        self.record = record
-        self.title = title
-        self.timestamp = timestamp
-        self.text = text
-        self.unit = unit
-        self.unit_short = unit_short
-
-    def __repr__(self):
-        return "<CountSet id:%d record.id:%d>" % (self.id, self.record)
-
-class ValueSet(db.Model):
-    __tablename__ = "valueset"
-    id = db.Column(db.Integer, primary_key=True)
-    res_id = db.Column(db.Integer, nullable=True)
-    record = db.Column(db.Integer, db.ForeignKey('record.id'))
-
-    unit_short = db.Column(db.String(12))
-    unit = db.Column(db.String(32))
-
-    timestamp = db.Column(db.DateTime)
-
-    title = db.Column(db.Text)
-    text = db.Column(db.Text, nullable=True)
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def create(self):
-        self.res_id = next_res_id_for_set(self.record)
-        self.save()
-
-    def get_data_with_res_id(self, res_id):
-        return ValueData.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
-
-    def get_data_all(self):
-        return ValueData.query.filter_by(set=self.id).all()
-
-    def __init__(self, record, title, timestamp=datetime.utcnow(), text=None,
-            unit=None, unit_short=None):
-        self.record = record
-        self.title = title
-        self.timestamp = timestamp
-        self.text = text
-        self.unit = unit
-        self.unit_short = unit_short
-
-    def __repr__(self):
-        return "<ValueSet id:%d record.id:%d>" % (self.id, self.record)
-
-class TimedSet(db.Model):
-    __tablename__ = "timedset"
+class Set(db.Model):
+    __tablename__ = "set"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
+    type = db.Column(db.Integer)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
     unit_short = db.Column(db.String(12))
@@ -285,6 +252,9 @@ class TimedSet(db.Model):
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
 
+    def type_str(self):
+        return DATA_TYPE_INT_STR[self.type]
+
     def save(self):
         db.session.add(self)
         db.session.commit()
@@ -294,14 +264,17 @@ class TimedSet(db.Model):
         self.save()
 
     def get_data_with_res_id(self, res_id):
-        return TimedData.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
+        mdl = data_model_from_type(self.type)
+        return mdl.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
 
     def get_data_all(self):
-        return TimedData.query.filter_by(set=self.id).all()
+        mdl = data_model_from_type(self.type)
+        return mdl.query.filter_by(set=self.id).all()
 
-    def __init__(self, record, title, timestamp=datetime.utcnow(), text=None,
-            unit="seconds", unit_short="s"):
+    def __init__(self, record, type, title, timestamp=datetime.utcnow(),
+            text=None, unit=None, unit_short=None):
         self.record = record
+        self.type = type
         self.title = title
         self.timestamp = timestamp
         self.text = text
@@ -309,7 +282,7 @@ class TimedSet(db.Model):
         self.unit_short = unit_short
 
     def __repr__(self):
-        return "<TimedSet id:%d record.id:%d>" % (self.id, self.record)
+        return "<Set id:%d record.id:%d>" % (self.id, self.record)
 
 def next_res_id_for_record(mdl, owner):
     last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
@@ -338,23 +311,10 @@ class Record(db.Model):
         self.save()
 
     def get_set_with_res_id(self, res_id):
-        cs = CountSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
-        if cs:
-            return cs
-        vs = ValueSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
-        if vs:
-            return vs
-        ts = TimedSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
-        if ts:
-            return ts
-        return None
+        return Set.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
 
     def get_set_all(self):
-        cs = CountSet.query.filter_by(record=self.id).all()
-        vs = ValueSet.query.filter_by(record=self.id).all()
-        ts = TimedSet.query.filter_by(record=self.id).all()
-        lst = cs + vs + ts
-        return sorted(lst, key = lambda model_instance : model_instance.res_id)
+        return Set.query.filter_by(record=self.id).all()
 
     def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW['private'],
             timestamp=datetime.utcnow(), text=None):
