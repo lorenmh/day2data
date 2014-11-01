@@ -18,8 +18,8 @@ class User(db.Model):
 
     def __init__(self, username, password):
         self.username = username
-        self.password = self.hash_password(password)
         self.salt = User.create_salt()
+        self.password = self.hash_password(password)
 
     def __repr__(self):
         return "<User id:%d>" % self.id
@@ -144,16 +144,29 @@ class TimedData(db.Model):
         return "<TimedData id:%d timedset.id:%d>" % (self.id, self.set)
 
 # each set should have relative resource ids (relative to record)
-def next_res_id_for_set(mdl, record):
-    last = db.session.query(mdl).filter_by(record=record).order_by("-id").first()
-    if last:
-        return last.res_id + 1
-    return 1
+def next_res_id_for_set(record):
+    cs = CountSet.query.filter_by(record=record).order_by('-id').first()
+    vs = ValueSet.query.filter_by(record=record).order_by('-id').first()
+    ts = TimedSet.query.filter_by(record=record).order_by('-id').first()
+    lst = []
+    if (cs != None):
+        lst.append(cs.res_id)
+    else:
+        lst.append(0)
+    if (vs != None):
+        lst.append(vs.res_id)
+    else:
+        lst.append(0)
+    if (ts != None):
+        lst.append(ts.res_id)
+    else:
+        lst.append(0)
+    return max(lst) + 1
 
 class CountSet(db.Model):
     __tablename__ = "countset"
     id = db.Column(db.Integer, primary_key=True)
-    res_id = db.Column(db.Integer)
+    res_id = db.Column(db.Integer, nullable=True)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
     timestamp = db.Column(db.DateTime)
@@ -166,7 +179,7 @@ class CountSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(CountSet, self.record)
+        self.res_id = next_res_id_for_set(self.record)
         self.save()
 
     def __init__(self, record, title, timestamp=datetime.now(), text=None):
@@ -181,7 +194,7 @@ class CountSet(db.Model):
 class ValueSet(db.Model):
     __tablename__ = "valueset"
     id = db.Column(db.Integer, primary_key=True)
-
+    res_id = db.Column(db.Integer, nullable=True)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
     timestamp = db.Column(db.DateTime)
@@ -194,7 +207,7 @@ class ValueSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(ValueSet, self.record)
+        self.res_id = next_res_id_for_set(self.record)
         self.save()
 
     def __init__(self, record, title, timestamp=datetime.now(), text=None):
@@ -222,7 +235,7 @@ class TimedSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(TimedSet, self.record)
+        self.res_id = next_res_id_for_set(self.record)
         self.save()
 
     def __init__(self, record, title, timestamp=datetime.now(), text=None):
@@ -258,6 +271,8 @@ class Record(db.Model):
     def create(self):
         self.res_id = next_res_id_for_record(Record, self.owner)
         self.save()
+
+    #def get_
 
     def __init__(self, owner, title, timestamp=datetime.now(), text=None):
         self.owner = owner
