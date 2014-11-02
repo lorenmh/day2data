@@ -79,11 +79,36 @@ def set_short(set):
         }
     }
 
-    if set.type == DATA_TYPE_INT["choice"]:
-        srl["set"]["key"] = choice_set_key(set)
-
     return srl
 
+def set_data(set):
+    srl = {
+        "data": data_short_for_type(set)
+    }
+    return json.dumps(srl)
+
+def data(set, data):
+    if set.type == DATA_TYPE_INT["count"]:
+        type = "count"
+        data_info = count_data_short(data)
+    elif set.type == DATA_TYPE_INT["value"]:
+        type = "value"
+        data_info = value_data_short(data)
+    elif set.type == DATA_TYPE_INT["timed"]:
+        type = "timed"
+        data_info = timed_data_short(data)
+    elif set.type == DATA_TYPE_INT["choice"]:
+        type = "choice"
+        data_info = choice_data_short(data)
+    else:
+        type = None
+        data_info = None
+    srl = {
+        "data": data_info,
+        "type": type,
+        "text": data.text
+    }
+    return json.dumps(srl)
 
 def count_data_short(data):
     srl = {
@@ -111,6 +136,7 @@ def timed_data_short(data):
 def choice_data_short(data):
     srl = {
         "id": data.res_id,
+        "timestamp": dt_to_ms(data.timestamp),
         "choice": data.choice
     }
     return srl
@@ -123,13 +149,27 @@ def choice_set_key(set):
     return key
 
 def data_short_for_type(set):
+    key = None
     if set.type == DATA_TYPE_INT["count"]:
-        return [count_data_short(d) for d in set.get_data_all()]
+        type = "count"
+        data_list = [count_data_short(d) for d in set.get_data_all()]
     elif set.type == DATA_TYPE_INT["value"]:
-        return [value_data_short(d) for d in set.get_data_all()]
+        type = "value"
+        data_list = [value_data_short(d) for d in set.get_data_all()]
     elif set.type == DATA_TYPE_INT["timed"]:
-        return [timed_data_short(d) for d in set.get_data_all()]
+        type = "timed"
+        data_list = [timed_data_short(d) for d in set.get_data_all()]
     elif set.type == DATA_TYPE_INT["choice"]:
-        return [choice_data_short(d) for d in set.get_data_all()]
+        type = "choice"
+        key = choice_set_key(set)
+        data_list = [choice_data_short(d) for d in set.get_data_all()]
     else:
-        return None
+        type = None
+        data_list = None
+    srl = {
+        "data": data_list,
+        "type": type
+    }
+    if key != None:
+        srl["key"] = key
+    return srl

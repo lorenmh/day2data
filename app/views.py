@@ -1,12 +1,17 @@
 from app import app, db
 from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
     get_data_or_404)
-import serializers, json
+import serializers, json, os
 from models import User, Record, Set
+from flask import render_template
+
+@app.route('/js/<path:path>')
+def static_js(path):
+    return app.send_static_file(os.path.join('js', path))
 
 @app.route('/')
 def index():
-    return '<h1>Hello</h1>'
+    return render_template('index.html')
 
 # get: return login page
 # post: attempt login
@@ -53,7 +58,7 @@ def api_set_index(user, record):
 
 # get: return set
 # put / post: update set
-@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>')
+@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/')
 @get_user_or_404
 @get_record_or_404
 @get_set_or_404
@@ -67,7 +72,7 @@ def api_set(user, record, set):
 @get_record_or_404
 @get_set_or_404
 def api_data_index(user, record, set):
-    return ''
+    return serializers.set_data(set)
 
 # get: return data
 # put / post: update data
@@ -77,4 +82,4 @@ def api_data_index(user, record, set):
 @get_set_or_404
 @get_data_or_404
 def api_data(user, record, set, data):
-    return ''
+    return serializers.data(set, data)

@@ -47,7 +47,7 @@ def get_data_or_404(fn):
     def wrapper(*args, **kwargs):
         set = kwargs["set"]
         data_id = kwargs.pop('data_id')
-        data = set.get_data_with_res_id(set_id)
+        data = set.get_data_with_res_id(data_id)
         if data != None:
             kwargs["data"] = data
             return fn(*args, **kwargs)

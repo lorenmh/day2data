@@ -21,9 +21,14 @@ DATA_TYPE_STR = {
     4: "choice"
 }
 
-PERMISSIONS_VIEW = {
+PERMISSIONS_VIEW_INT = {
     "private": 1,
     "public": 2
+}
+
+PERMISSIONS_VIEW_STR = {
+    1: "private",
+    2: "public"
 }
 
 class User(db.Model):
@@ -367,7 +372,7 @@ class Record(db.Model):
     def get_set_all(self):
         return Set.query.filter_by(record=self.id).all()
 
-    def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW['private'],
+    def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW_INT['private'],
             timestamp=datetime.utcnow(), text=None):
         self.owner = owner
         self.title = title
