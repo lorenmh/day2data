@@ -46,7 +46,7 @@ class User(db.Model):
         return Record.query.filter_by(owner=self.id).filter_by(res_id=res_id).first()
 
     def get_record_all(self):
-        return Record.query.filter_by(set=self.id).all()
+        return Record.query.filter_by(owner=self.id).all()
 
     def __init__(self, username, password, timestamp=datetime.utcnow(), about=None):
         self.username = username
@@ -314,6 +314,10 @@ class Set(db.Model):
         mdl = data_model_from_type(self.type)
         return mdl.query.filter_by(set=self.id).all()
 
+    def get_data_count(self):
+        mdl = data_model_from_type(self.type)
+        return mdl.query.filter_by(set=self.id).count()
+
     def __init__(self, record, type, title, timestamp=datetime.utcnow(),
             text=None, unit=None, unit_short=None):
         self.record = record
@@ -356,6 +360,9 @@ class Record(db.Model):
 
     def get_set_with_res_id(self, res_id):
         return Set.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
+
+    def get_set_count(self):
+        return Set.query.filter_by(record=self.id).count()
 
     def get_set_all(self):
         return Set.query.filter_by(record=self.id).all()

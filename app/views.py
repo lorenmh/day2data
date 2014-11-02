@@ -1,10 +1,12 @@
 from app import app, db
-from serializers import *
-from models import *
+from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
+    get_data_or_404)
+import serializers, json
+from models import User, Record, Set
 
 @app.route('/')
 def index():
-    return ''
+    return '<h1>Hello</h1>'
 
 # get: return login page
 # post: attempt login
@@ -21,42 +23,58 @@ def api_login():
 # get: return user details
 # put / post: update user details
 @app.route('/api/u/<user_id>/')
-def api_user(user_id):
-    user = User.with_username(user_id)
-    return ''
+@get_user_or_404
+def api_user(user):
+    #user = User.with_username(user_id)
+    return serializers.user(user)
 
 # get: return all record
 # post: create new record
 @app.route('/api/u/<user_id>/r/')
-def api_record_index(user_id):
-    return ''
+@get_user_or_404
+def api_record_index(user):
+    return serializers.user_records(user)
 
 # get: return record
 # put / post: update record
 @app.route('/api/u/<user_id>/r/<record_id>/')
-def api_record(user_id, record_id):
-    return ''
+@get_user_or_404
+@get_record_or_404
+def api_record(user, record):
+    return serializers.record(record)
 
 # get: return all sets
 # post: create new set
 @app.route('/api/u/<user_id>/r/<record_id>/s/')
-def api_set_index(user_id, record_id):
-    return ''
+@get_user_or_404
+@get_record_or_404
+def api_set_index(user, record):
+    return serializers.record_sets(record)
 
 # get: return set
 # put / post: update set
 @app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>')
-def api_set(user_id, record_id, set_id):
-    return ''
+@get_user_or_404
+@get_record_or_404
+@get_set_or_404
+def api_set(user, record, set):
+    return serializers.set(set)
 
 # get: return all data
 # post: create new data
 @app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/d/')
-def api_data_index(user_id, record_id, set_id):
+@get_user_or_404
+@get_record_or_404
+@get_set_or_404
+def api_data_index(user, record, set):
     return ''
 
 # get: return data
 # put / post: update data
 @app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/d/<data_id>/')
-def api_data(user_id, record_id, set_id, data_id):
+@get_user_or_404
+@get_record_or_404
+@get_set_or_404
+@get_data_or_404
+def api_data(user, record, set, data):
     return ''

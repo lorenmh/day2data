@@ -18,7 +18,7 @@ def user(usr):
             "about": usr.about,
         }
     }
-    return srl
+    return json.dumps(srl)
 
 def user_short(usr):
     srl = {
@@ -27,6 +27,63 @@ def user_short(usr):
         }
     }
     return srl
+
+def user_records(usr):
+    srl = {
+        "records": [record_short(r) for r in usr.get_record_all()]
+    }
+    return json.dumps(srl)
+
+def record(rcd):
+    srl = record_short(rcd)
+    srl["record"]["sets"] = [set_short(set) for set in rcd.get_set_all()]
+    return json.dumps(srl)
+
+def record_short(rcd):
+    srl = {
+        "record": {
+            "id": rcd.res_id,
+            "owner": user_short(User.query.get(rcd.owner)),
+            "title": rcd.title,
+            "text": rcd.text,
+            "timestamp": dt_to_ms(rcd.timestamp),
+            "set_count": rcd.get_set_count()
+        }
+    }
+    return srl
+
+def record_sets(rcd):
+    srl = {
+        "sets": [set_short(s) for s in rcd.get_set_all()]
+    }
+    return json.dumps(srl)
+
+
+def set(set):
+    srl = set_short(set)
+    srl["set"]["unit"] = set.unit
+    srl["set"]["unit_short"] = set.unit_short
+    srl["set"]["data"] = data_short_for_type(set)
+    return json.dumps(srl)
+
+
+def set_short(set):
+    srl = {
+        "set": {
+            "id": set.res_id,
+            "title": set.title,
+            "text": set.text,
+            "timestamp": dt_to_ms(set.timestamp),
+            "type": DATA_TYPE_STR[set.type],
+            "data_count": set.get_data_count()
+        }
+    }
+
+    if set.type == DATA_TYPE_INT["choice"]:
+        srl["set"]["key"] = choice_set_key(set)
+
+    return srl
+
 
 def count_data_short(data):
     srl = {
@@ -76,45 +133,3 @@ def data_short_for_type(set):
         return [choice_data_short(d) for d in set.get_data_all()]
     else:
         return None
-
-def set(set):
-    srl = set_short(set)
-    srl["set"]["unit"] = set.unit
-    srl["set"]["unit_short"] = set.unit_short
-    srl["set"]["data"] = data_short_for_type(set)
-    return srl
-
-
-def set_short(set):
-    srl = {
-        "set": {
-            "id": set.res_id,
-            "title": set.title,
-            "text": set.text,
-            "timestamp": dt_to_ms(set.timestamp),
-            "type": DATA_TYPE_STR[set.type]
-        }
-    }
-
-    if set.type == DATA_TYPE_INT["choice"]:
-        srl["set"]["key"] = choice_set_key(set)
-
-    return srl
-
-
-def record(rcd):
-    srl = record_short(rcd)
-    srl["record"]["sets"] = [set_short(set) for set in rcd.get_set_all()]
-    return srl
-
-def record_short(rcd):
-    srl = {
-        "record": {
-            "id": rcd.res_id,
-            "owner": user_short(User.query.get(rcd.owner)),
-            "title": rcd.title,
-            "text": rcd.text,
-            "timestamp": dt_to_ms(rcd.timestamp)
-        }
-    }
-    return srl
