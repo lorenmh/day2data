@@ -1,0 +1,38 @@
+<html>
+<head>
+  <script src="/js/d3.min.js"></script>
+  <script>
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/api/u/foo/r/1/s/1/");
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+    xhr.send();
+
+    xhr.onload = function() {
+      window.res = JSON.parse(xhr.responseText);
+      if (window.res.error) {
+        alert('error:' + window.res.error);
+      } else {
+        window.data = window.res.set.data.data;
+      }
+    
+    };
+
+  </script>
+</head>
+
+<body>
+<svg id="graph" with="1000" height="500"></svg>
+
+<script>
+var view = d3.select('#graph'),
+    width = 1000,
+    height = 500,
+    margins = { top: 20, right: 20, bottom: 20, left: 50},
+    xRange = d3.scale.linear().range([margins.left,])
+
+
+</script
+
+</body>
+
+</html>

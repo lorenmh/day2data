@@ -1,7 +1,7 @@
 # coding: utf-8
 from app import db, secret
 from datetime import datetime
-import os, binascii, hashlib, re
+import os, binascii, bcrypt, re
 
 VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
 VALID_USERNAME_RE = "^[\w\-]{3,16}$"
@@ -35,10 +35,9 @@ class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(16), unique=True)
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     about = db.Column(db.Text, nullable=True)
     password = db.Column(db.String(64))
-    salt = db.Column(db.String(64))
 
     def save(self):
         db.session.add(self)
@@ -53,9 +52,8 @@ class User(db.Model):
     def get_record_all(self):
         return Record.query.filter_by(owner=self.id).all()
 
-    def __init__(self, username, password, timestamp=datetime.utcnow(), about=None):
+    def __init__(self, username, password, timestamp=None, about=None):
         self.username = username
-        self.salt = User.create_salt()
         self.password = self.hash_password(password)
         self.timestamp = timestamp
         self.about = about
@@ -75,20 +73,16 @@ class User(db.Model):
     def valid_username(username):
         return re.match(VALID_USERNAME_RE, username) != None
 
-    @staticmethod
-    def create_salt():
-        return binascii.b2a_hex(os.urandom(32))
-
     def hash_password(self, pswd):
-        return hashlib.sha256(pswd + self.salt + secret).hexdigest()
+        return bcrypt.hashpw(pswd, bcrypt.gensalt(10))
 
     def matches_password(self, str):
-        return self.password == self.hash_password(str)
+        return bcrypt.hashpw(str, self.password) == self.password
 
 class TimePoint(db.Model):
     __tablename__ = "timepoint"
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     def save(self):
         db.session.add(self)
@@ -97,7 +91,7 @@ class TimePoint(db.Model):
     def create(self):
         self.save()
 
-    def __init__(self, timestamp=datetime.utcnow()):
+    def __init__(self, timestamp=None):
         self.timestamp = timestamp
 
     def __repr__(self):
@@ -116,7 +110,7 @@ class CountData(db.Model):
     res_id = db.Column(db.Integer)
     set = db.Column(db.Integer, db.ForeignKey('set.id'))
 
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
     text = db.Column(db.Text, nullable=True)
 
@@ -128,7 +122,7 @@ class CountData(db.Model):
         self.res_id = next_res_id_for_data(CountData, self.set)
         self.save()
 
-    def __init__(self, set, timestamp=datetime.utcnow(), text=None):
+    def __init__(self, set, timestamp=None, text=None):
         self.set = set
         self.timestamp = timestamp
         self.text = text
@@ -143,7 +137,7 @@ class ValueData(db.Model):
     res_id = db.Column(db.Integer)
     set = db.Column(db.Integer, db.ForeignKey('set.id'))
     
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     text = db.Column(db.Text, nullable=True)
 
@@ -157,7 +151,7 @@ class ValueData(db.Model):
         self.res_id = next_res_id_for_data(ValueData, self.set)
         self.save()
 
-    def __init__(self, set, timestamp=datetime.utcnow(), text=None, value=None):
+    def __init__(self, set, timestamp=None, text=None, value=None):
         self.set = set
         self.timestamp = timestamp
         self.text = text
@@ -241,7 +235,7 @@ class ChoiceData(db.Model):
     res_id = db.Column(db.Integer)
     set = db.Column(db.Integer, db.ForeignKey('set.id'))
 
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
     text = db.Column(db.Text, nullable=True)
 
@@ -256,7 +250,7 @@ class ChoiceData(db.Model):
         self.res_id = next_res_id_for_data(ChoiceData, self.set)
         self.save()
 
-    def __init__(self, set, choice, timestamp=datetime.utcnow(), text=None):
+    def __init__(self, set, choice, timestamp=None, text=None):
         self.set = set
         self.choice = choice
         self.timestamp = timestamp
@@ -295,7 +289,7 @@ class Set(db.Model):
     unit_short = db.Column(db.String(12))
     unit = db.Column(db.String(32))
 
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
@@ -323,7 +317,7 @@ class Set(db.Model):
         mdl = data_model_from_type(self.type)
         return mdl.query.filter_by(set=self.id).count()
 
-    def __init__(self, record, type, title, timestamp=datetime.utcnow(),
+    def __init__(self, record, type, title, timestamp=None,
             text=None, unit=None, unit_short=None):
         self.record = record
         self.type = type
@@ -350,7 +344,7 @@ class Record(db.Model):
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
     permissions_view = db.Column(db.Integer)
 
-    timestamp = db.Column(db.DateTime)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
@@ -373,7 +367,7 @@ class Record(db.Model):
         return Set.query.filter_by(record=self.id).all()
 
     def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW_INT['private'],
-            timestamp=datetime.utcnow(), text=None):
+            timestamp=None, text=None):
         self.owner = owner
         self.title = title
         self.permissions_view = permissions_view

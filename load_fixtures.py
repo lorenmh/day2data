@@ -54,41 +54,10 @@ for i in range(10):
     ch_data = ChoiceData(5, rand)
     ch_data.create()
 
-'''
-from app.models import *
-from app.serializers import *
-
-r = Record.query.get(1)
-
-s = r.get_set_with_res_id(4)
-set(s)
-
-record(r)
-u = User.query.get(1)
-user(u)
-
-
-from app.models import *
-from app.serializers import *
-
-r = Record.query.get(1)
-record(r)
-
-s = r.get_set_with_res_id(1)
-
-set(s)
-
-
-
-
-
-
-
-
-
-for i in range(10):
-    rand = randrange(0,4)
+# the lazy haha
+for i in range(20):
+    rand = randrange(0,6)
     print "sleep %d" % rand
     sleep(rand)
     cdata = CountData(1)
-    cdata.create()'''
+    cdata.create()
