@@ -1,6 +1,6 @@
 angular.module('app', ['ui.router']);
 
-path = {
+var path = {
   root: "/static/",
   join_root: function(sub_path) {
     if (sub_path.charAt(0) === "/") {

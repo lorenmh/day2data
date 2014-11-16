@@ -11,8 +11,32 @@ def dt_to_key(dt):
     return "%s:%s:%s" % (dt.month, dt.day, dt.year)
 
 def dt_to_sec(dt):
-    return time.mktime(dt.timetuple())
+    return int(time.mktime(dt.timetuple()))
 
+'''
+    an attempt has the following schema in redis:
+    redis: {
+        address: {
+            recent_attempts: [ entry for each attempt in unix time in seconds (/1000)],
+            daily: {
+                date: "a string representing a date",
+                count: an int representing the number of attempts for above date
+            }
+        }
+    }
+
+    ex:
+    {
+        "127.0.0.1": {
+            recent_attempts: [1416125471, 1416125481, 1416125486],
+            daily: {
+                date: "11:15:2014",
+                count: 12
+            }
+        }
+    }
+
+'''
 def can_attempt_login(address):
     now = datetime.now()
     attempts = r_login.get(address)

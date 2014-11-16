@@ -4,7 +4,8 @@ var gulp    = require('gulp'),
     static  = require('connect-gzip-static'),
     logger  = require('morgan'),
     concat  = require('gulp-concat'),
-    gzip    = require('gulp-gzip');
+    gzip    = require('gulp-gzip'),
+    watch   = require('gulp-watch');
 
 var APP_PATH = "./app/static/";
 var LIB_SCRIPTS_DESTINATION = APP_PATH + "dist/js/lib/";
@@ -101,6 +102,10 @@ gulp.task('concat_lib', function() {
     .pipe(gulp.dest(LIB_SCRIPTS_DESTINATION))
     .pipe(gzip())
     .pipe(gulp.dest(LIB_SCRIPTS_DESTINATION));
+});
+
+gulp.task('watch_static', ['concat_app'], function() {
+  gulp.watch("./app/static/**/*.js", ["concat_app"]);
 });
 
 gulp.task('concat_all', ['concat_skel', 'concat_app', 'concat_lib'], function() {
