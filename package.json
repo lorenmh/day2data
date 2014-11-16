@@ -3,6 +3,17 @@
   "version": "0.0.1",
   "description": "an application to store user data",
   "dependencies": {
-    "less": "*"
-   }
+    "less": "*",
+    "gulp": "^3.8.10"
+  },
+  "devDependencies": {
+    "bower": "^1.3.12",
+    "connect": "^3.3.3",
+    "connect-gzip-static": "^1.0.0",
+    "gulp": "^3.8.10",
+    "gulp-concat": "^2.4.1",
+    "gulp-gzip": "0.0.8",
+    "gulp-watch": "^1.2.0",
+    "morgan": "^1.5.0"
+  }
  }

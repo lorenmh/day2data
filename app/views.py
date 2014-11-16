@@ -5,14 +5,15 @@ import serializers, json, os
 from models import User, Record, Set
 from flask import render_template
 
-@app.route('/js/<path:path>')
-def static_js(path):
-    return app.send_static_file(os.path.join('js', path))
-
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/js/<path:path>')
+def static_js(path):
+    return app.send_static_file(os.path.join('js', path))
+
+'''
 # get: return login page
 # post: attempt login
 @app.route('/login/')
@@ -23,7 +24,7 @@ def login():
 # post: attempt login
 @app.route('/api/login/')
 def api_login():
-    return ''
+    return '''
 
 # get: return user details
 # put / post: update user details

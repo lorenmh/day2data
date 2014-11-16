@@ -13,7 +13,7 @@ rcrd.create()
 
 cset = Set(1, 1, 'First Count Set')
 cset.create()
-
+'''
 vset = Set(1, 2, 'First Value Set')
 vset.create()
 
@@ -53,9 +53,9 @@ for i in range(10):
     rand = randrange(1, 5)
     ch_data = ChoiceData(5, rand)
     ch_data.create()
-
+'''
 # the lazy haha
-for i in range(20):
+for i in range(100):
     rand = randrange(0,6)
     print "sleep %d" % rand
     sleep(rand)
