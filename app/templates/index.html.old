@@ -1,0 +1,117 @@
+<html>
+<head>
+  <style>
+
+  body {
+    font: 10px sans-serif;
+  }
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .x.axis path {
+    display: none;
+  }
+
+  .line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+
+  </style>
+  <script src="/js/d3.min.js"></script>
+  <script>
+    function get(path) {
+      return new Promise(function(resolve, reject) {
+        var response, 
+            xhr = new XMLHttpRequest();
+        xhr.open("GET", path);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.send();
+
+        xhr.onload = function() {
+          response = JSON.parse(xhr.responseText);
+          if (response.error) {
+            reject(response.error);
+          } else {
+            resolve(response);
+          }
+        };
+      });
+    }
+
+    function data_from_set(set) {
+      return set.set.data.data;
+    }
+  </script>
+</head>
+
+<body>
+<svg id="graph" width="1000" height="500"></svg>
+
+<script>
+var svg = d3.select("svg#graph");
+var width = +svg.attr('width'),
+    height = +svg.attr('height');
+
+var x = d3.time.scale().range([ 0, width ]);
+var y = d3.scale.linear().range([ height, 0 ]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var line = d3.svg.line()
+    .x(function(d) { return x(d.timestamp); })
+    .y(function(d) { return y(d.id); });
+
+var parse_timestamp = function(d) {
+  return new Date(d);
+};
+
+d3.json("/api/u/foo/r/1/s/1/", function(error, res) {
+  var data = res.set.data.data;
+
+  data.forEach(function(d) {
+    d.timestamp = parse_timestamp(d.timestamp);
+  });
+
+  x.domain(d3.extent(data, function(d) { return d.timestamp; }));
+  y.domain(d3.extent(data, function(d) { return d.id; }));
+
+  svg.append("g")
+      .attr('class', 'x axis')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(xAxis);
+
+  svg.append("g")
+      .attr('class', 'y axis')
+      .call(yAxis)
+    .append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 6)
+      .attr('dy', '.71em')
+      .style('text-anchor', 'end')
+      .text('Number');
+
+  svg.append('path')
+    .datum(data)
+    .attr('class', 'line')
+    .attr('d', line);
+});
+
+
+</script>
+
+</body>
+
+</html>

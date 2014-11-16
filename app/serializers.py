@@ -18,7 +18,7 @@ def user(usr):
             "about": usr.about,
         }
     }
-    return json.dumps(srl)
+    return srl
 
 def user_short(usr):
     srl = {
@@ -32,12 +32,12 @@ def user_records(usr):
     srl = {
         "records": [record_short(r) for r in usr.get_record_all()]
     }
-    return json.dumps(srl)
+    return srl
 
 def record(rcd):
     srl = record_short(rcd)
     srl["record"]["sets"] = [set_short(set) for set in rcd.get_set_all()]
-    return json.dumps(srl)
+    return srl
 
 def record_short(rcd):
     srl = {
@@ -56,7 +56,7 @@ def record_sets(rcd):
     srl = {
         "sets": [set_short(s) for s in rcd.get_set_all()]
     }
-    return json.dumps(srl)
+    return srl
 
 
 def set(set):
@@ -64,7 +64,7 @@ def set(set):
     srl["set"]["unit"] = set.unit
     srl["set"]["unit_short"] = set.unit_short
     srl["set"]["data"] = data_short_for_type(set)
-    return json.dumps(srl)
+    return srl
 
 
 def set_short(set):
@@ -85,7 +85,7 @@ def set_data(set):
     srl = {
         "data": data_short_for_type(set)
     }
-    return json.dumps(srl)
+    return srl
 
 def data(set, data):
     if set.type == DATA_TYPE_INT["count"]:
@@ -108,7 +108,7 @@ def data(set, data):
         "type": type,
         "text": data.text
     }
-    return json.dumps(srl)
+    return srl
 
 def count_data_short(data):
     srl = {

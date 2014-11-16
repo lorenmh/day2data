@@ -74,10 +74,10 @@ class User(db.Model):
         return re.match(VALID_USERNAME_RE, username) != None
 
     def hash_password(self, pswd):
-        return bcrypt.hashpw(pswd, bcrypt.gensalt(10))
+        return bcrypt.hashpw(pswd.encode('utf-8'), bcrypt.gensalt(10))
 
     def matches_password(self, str):
-        return bcrypt.hashpw(str, self.password) == self.password
+        return bcrypt.hashpw(str.encode('utf-8'), self.password.encode('utf-8')) == self.password
 
 class TimePoint(db.Model):
     __tablename__ = "timepoint"
