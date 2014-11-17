@@ -2,9 +2,11 @@ angular.module('app', ['ui.router', 'user']);
 
 angular.module('app').constant('path', {
   app_root: "/static/",
-  api: "/api/",
+  api:      "/api/",
   uri: {
-    init: "init"
+    init:   "init",
+    login:  "login",
+    logout: "logout"
   },
   join: function(base_path, sub_path) {
     if (sub_path.charAt(0) === "/") {
@@ -27,9 +29,9 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
       .state('root', {
         resolve: {
           init: function(api, userService) {
-            api.get(path.uri.init).success(function(res){
+            api.init().success(function(res){
               if (res) {
-                userService.init(res.user);
+                userService.init(res);
               }
             });
           }

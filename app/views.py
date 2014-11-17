@@ -24,12 +24,12 @@ def static_file(path):
 def login():
     address = request.remote_addr
     if can_attempt_login(address):
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.json["id"]
+        password = request.json["password"]
         user = User.with_username(username)
         if user:
             if user.matches_password(password):
-                session['username'] = username
+                session['id'] = username
                 return json.dumps(serializers.user(user))
             else:
                 set_failed_login(address)
@@ -41,13 +41,13 @@ def login():
 
 @app.route('/api/logout')
 def logout():
-    session.pop('username', None)
+    session.pop('id', None)
     return '', 200
 
 @app.route('/api/init', methods=["GET"])
 def init():
-    if 'username' in session:
-        user = User.with_username(session["username"])
+    if 'id' in session:
+        user = User.with_username(session["id"])
         if user:
             return json.dumps(serializers.user(user))
     return '', 200

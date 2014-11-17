@@ -3,11 +3,19 @@ angular.module('user').controller('UserPanelCtrl', [
   'userService',
   function($scope, userService) {
     $scope.id = userService.id;
+    $scope.login_errors = userService.login_errors;
     
-    var id_cb = function(new_id) {
-      $scope.id = new_id;
+    var user_cb = function() {
+      $scope.id = userService.id;
+      $scope.login_errors = userService.login_errors;
     };
-    userService.observer(id_cb);
+    userService.observer(user_cb);
 
+    $scope.show_login = function() {
+      userService.login('foo', 'pswd');
+    };
 
+    $scope.logout = function() {
+      userService.logout();
+    };
 }]);

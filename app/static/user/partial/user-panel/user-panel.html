@@ -1,4 +1,11 @@
 <div ng-controller="UserPanelCtrl">
   <h1>USER PANEL</h1>
-  <p>Logged in as: {{ id }}</p>
+  <div class="login-status" ng-if="id">
+    <div class="logged-in text">logged in as: <span class="username text">{{ id }}</span></div>
+    <a ng-click="logout()" class="logout button">logout</a>
+  </div>
+  <div class="login-status" ng-if="!id">
+    <div class="logged-out text">not logged in</div>
+    <a ng-click="show_login()" class="login button">login</a>
+  </div>
 </div>

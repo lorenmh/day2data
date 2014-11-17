@@ -1,29 +1,51 @@
-angular.module('user').factory('userService', function() {
-  var user = {};
-  var observers = [];
+angular.module('user').factory('userService', ['api',
+  function(api) {
+    var user = {};
+    var observers = [];
 
-  user.id = "default";
+    user.login_errors = null;
+    user.id = null;
 
-  user.observer = function(cb) {
-    observers.push(cb);
-  };
+    user.observer = function(cb) {
+      observers.push(cb);
+    };
 
-  var notify = function() {
-    angular.forEach(observers, function(cb) {
-      cb();
-    });
-  };
+    var notify = function() {
+      angular.forEach(observers, function(cb) {
+        cb();
+      });
+    };
 
-  user.set_user = function(obj) {
-    if (obj) {
-      user.id = obj.id;
+    var set_id = function(id) {
+      user.id = id;
       notify();
-    }
-  };
+    };
 
-  user.init = function(obj) {
-    user.set_user(obj);
-  };
+    var set_login_errors = function(e) {
+      user.login_errors = e;
+      notify();
+    };
 
-  return user;
-});
+    user.logout = function() {
+      api.logout();
+      set_id(null);
+    };
+
+    user.login = function(id, password) {
+      api.login(id, password)
+        .success(function(d) {
+          user.init(d);
+        })
+        .error(function(d) {
+          set_login_errors(d.errors);
+        });
+    };
+
+    user.init = function(obj) {
+      if (obj) {
+        set_id(obj.user.id);
+      }
+    };
+
+    return user;
+}]);

@@ -2,9 +2,11 @@ angular.module('app', ['ui.router', 'user']);
 
 angular.module('app').constant('path', {
   app_root: "/static/",
-  api: "/api/",
+  api:      "/api/",
   uri: {
-    init: "init"
+    init:   "init",
+    login:  "login",
+    logout: "logout"
   },
   join: function(base_path, sub_path) {
     if (sub_path.charAt(0) === "/") {
@@ -27,9 +29,9 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
       .state('root', {
         resolve: {
           init: function(api, userService) {
-            api.get(path.uri.init).success(function(res){
+            api.init().success(function(res){
               if (res) {
-                userService.init(res.user);
+                userService.init(res);
               }
             });
           }
@@ -50,8 +52,24 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
 angular.module('app').factory('api', ['$http', 'path', function($http, path) {
   var api = {};
 
-  api.get = function(sub_uri) {
-    return $http.get(path.join_api(sub_uri));
+  api.get = function(uri) {
+    return $http.get(path.join_api(uri));
+  };
+
+  api.post = function(uri, data) {
+    return $http.post(path.join_api(uri), JSON.stringify(data));
+  };
+
+  api.init = function() {
+    return api.get(path.uri.init);
+  };
+
+  api.logout = function() {
+    return api.get(path.uri.logout);
+  };
+
+  api.login = function(id, password) {
+    return api.post(path.uri.login, {id: id, password: password});
   };
 
   return api;
@@ -81,40 +99,70 @@ angular.module('user').controller('UserPanelCtrl', [
   'userService',
   function($scope, userService) {
     $scope.id = userService.id;
+    $scope.login_errors = userService.login_errors;
     
-    var id_cb = function(new_id) {
-      $scope.id = new_id;
+    var user_cb = function() {
+      $scope.id = userService.id;
+      $scope.login_errors = userService.login_errors;
     };
-    userService.observer(id_cb);
+    userService.observer(user_cb);
 
+    $scope.show_login = function() {
+      userService.login('foo', 'pswd');
+    };
 
+    $scope.logout = function() {
+      userService.logout();
+    };
 }]);
-angular.module('user').factory('userService', function() {
-  var user = {};
-  var observers = [];
+angular.module('user').factory('userService', ['api',
+  function(api) {
+    var user = {};
+    var observers = [];
 
-  user.id = "default";
+    user.login_errors = null;
+    user.id = null;
 
-  user.observer = function(cb) {
-    observers.push(cb);
-  };
+    user.observer = function(cb) {
+      observers.push(cb);
+    };
 
-  var notify = function() {
-    angular.forEach(observers, function(cb) {
-      cb();
-    });
-  };
+    var notify = function() {
+      angular.forEach(observers, function(cb) {
+        cb();
+      });
+    };
 
-  user.set_user = function(obj) {
-    if (obj) {
-      user.id = obj.id;
+    var set_id = function(id) {
+      user.id = id;
       notify();
-    }
-  };
+    };
 
-  user.init = function(obj) {
-    user.set_user(obj);
-  };
+    var set_login_errors = function(e) {
+      user.login_errors = e;
+      notify();
+    };
 
-  return user;
-});
+    user.logout = function() {
+      api.logout();
+      set_id(null);
+    };
+
+    user.login = function(id, password) {
+      api.login(id, password)
+        .success(function(d) {
+          user.init(d);
+        })
+        .error(function(d) {
+          set_login_errors(d.errors);
+        });
+    };
+
+    user.init = function(obj) {
+      if (obj) {
+        set_id(obj.user.id);
+      }
+    };
+
+    return user;
+}]);
