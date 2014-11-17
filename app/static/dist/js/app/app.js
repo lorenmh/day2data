@@ -3,6 +3,9 @@ angular.module('app', ['ui.router', 'user']);
 angular.module('app').constant('path', {
   app_root: "/static/",
   api: "/api/",
+  uri: {
+    init: "init"
+  },
   join: function(base_path, sub_path) {
     if (sub_path.charAt(0) === "/") {
       return base_path + sub_path.slice(1);
@@ -23,8 +26,12 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
     $stateProvider
       .state('root', {
         resolve: {
-          init: function(api) {
-            api.get('u/foo/').success(function(d){ console.log(d); });
+          init: function(api, userService) {
+            api.get(path.uri.init).success(function(res){
+              if (res) {
+                userService.init(res.user);
+              }
+            });
           }
         },
         url: '',
@@ -69,6 +76,45 @@ angular.module('user', ['ui.router']);
 angular.module('user').controller('UserInfoCtrl', function($scope) {
   $scope.user = "some user info var";
 });
-angular.module('user').controller('UserPanelCtrl', function($scope) {
-  $scope.user = "some user panel var";
+angular.module('user').controller('UserPanelCtrl', [
+  '$scope',
+  'userService',
+  function($scope, userService) {
+    $scope.id = userService.id;
+    
+    var id_cb = function(new_id) {
+      $scope.id = new_id;
+    };
+    userService.observer(id_cb);
+
+
+}]);
+angular.module('user').factory('userService', function() {
+  var user = {};
+  var observers = [];
+
+  user.id = "default";
+
+  user.observer = function(cb) {
+    observers.push(cb);
+  };
+
+  var notify = function() {
+    angular.forEach(observers, function(cb) {
+      cb();
+    });
+  };
+
+  user.set_user = function(obj) {
+    if (obj) {
+      user.id = obj.id;
+      notify();
+    }
+  };
+
+  user.init = function(obj) {
+    user.set_user(obj);
+  };
+
+  return user;
 });

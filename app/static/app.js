@@ -18,9 +18,6 @@ angular.module('app').constant('path', {
   },
   join_api: function(sub_path) {
     return this.join(this.api, sub_path);
-  },
-  init: function() {
-    return this.join(this.api, this.uri.init);
   }
 });
 
@@ -29,8 +26,12 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
     $stateProvider
       .state('root', {
         resolve: {
-          init: function(api) {
-            api.init().success(function(d){ console.log("intialize"); console.log(d); });
+          init: function(api, userService) {
+            api.get(path.uri.init).success(function(res){
+              if (res) {
+                userService.init(res.user);
+              }
+            });
           }
         },
         url: '',

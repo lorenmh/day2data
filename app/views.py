@@ -1,4 +1,4 @@
-from flask import render_template, send_from_directory, request
+from flask import render_template, send_from_directory, request, session
 from app import app, db
 from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
     get_data_or_404)
@@ -29,7 +29,8 @@ def login():
         user = User.with_username(username)
         if user:
             if user.matches_password(password):
-                return 'logged in!'
+                session['username'] = username
+                return json.dumps(serializers.user(user))
             else:
                 set_failed_login(address)
                 return api_error_message("username password combination incorrect"), 400
@@ -38,6 +39,18 @@ def login():
     else:
         return api_error_message("maximum number of login attempts exceeded, please try again later"), 400
 
+@app.route('/api/logout')
+def logout():
+    session.pop('username', None)
+    return '', 200
+
+@app.route('/api/init', methods=["GET"])
+def init():
+    if 'username' in session:
+        user = User.with_username(session["username"])
+        if user:
+            return json.dumps(serializers.user(user))
+    return '', 200
 
 # get: return user details
 # put / post: update user details

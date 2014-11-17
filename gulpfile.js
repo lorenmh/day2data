@@ -35,13 +35,14 @@ var lib_paths = {
 };
 
 var app_paths = {
-  "app":        "app.js",
-  "api":        "service/api.js",
-  "root":       "partial/root/root.js",
-  "home":       "partial/home/home.js",
-  "user":       "user/user.js",
-  "user-info":  "user/partial/user-info/user-info.js",
-  "user-panel": "user/partial/user-panel/user-panel.js" 
+  "app":          "app.js",
+  "api":          "service/api.js",
+  "root":         "partial/root/root.js",
+  "home":         "partial/home/home.js",
+  "user":         "user/user.js",
+  "user-info":    "user/partial/user-info/user-info.js",
+  "user-panel":   "user/partial/user-panel/user-panel.js",
+  "userService":  "user/service/userService.js"
 };
 
 // app_root = barebones stuff
@@ -58,7 +59,8 @@ var ang_app = [
   "home",
   "user",
   "user-info",
-  "user-panel"
+  "user-panel",
+  "userService"
 ];
 
 var app_lib = [
