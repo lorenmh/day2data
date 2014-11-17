@@ -1,3 +1,5 @@
-<div class="col-md-12" ng-controller="RootCtrl">
-  Hello {{ world }}
+<div ng-controller="RootCtrl">
+  <h1>ROOT</h1>
+  <ng-include src="'/static/user/partial/user-panel/user-panel.html'"></ng-include>
+  <ui-view></ui-view>
 </div>

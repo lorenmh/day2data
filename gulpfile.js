@@ -36,7 +36,12 @@ var lib_paths = {
 
 var app_paths = {
   "app":        "app.js",
-  "root":       "partial/root/root.js"
+  "api":        "service/api.js",
+  "root":       "partial/root/root.js",
+  "home":       "partial/home/home.js",
+  "user":       "user/user.js",
+  "user-info":  "user/partial/user-info/user-info.js",
+  "user-panel": "user/partial/user-panel/user-panel.js" 
 };
 
 // app_root = barebones stuff
@@ -48,7 +53,12 @@ var app_skel = [
 
 var ang_app = [
   "app",
-  "root"
+  "api",
+  "root",
+  "home",
+  "user",
+  "user-info",
+  "user-panel"
 ];
 
 var app_lib = [
