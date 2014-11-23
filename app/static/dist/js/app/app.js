@@ -47,10 +47,8 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
       .state('root', {
         resolve: {
           init: function(api, userService) {
-            console.log('a');
-            api.init().success( function(res){
+            api.init().success(function(res) {
               if (res) {
-                console.log('b');
                 userService.init(res);
               }
             });
