@@ -39,3 +39,12 @@ Will have all basic functionality; User can create and view data sets and record
 User will be able to make each record private / public, (private default)
 ###ChoiceSet
 Add a ChoiceSet with ChoiceData and a Choice table (with res\_ids), where only one of a certain set of choices can be selected.  Ex: 'Green', 'Yellow', 'Red'.  A person could record which color of stoplight they encounter while driving (stupid example, but it gets the point across).  This would allow data to be displayed in pie charts.
+
+#update 11/23
+move partials over to directives:  
+*login form
+*user status
+*menu
+*navbar  
+
+  start thinking of how to put together a d3 / chart directive
