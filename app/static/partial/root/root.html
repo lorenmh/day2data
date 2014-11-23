@@ -1,5 +1,12 @@
-<div ng-cloak ng-controller="RootCtrl">
+<div class="container" ng-cloak ng-controller="RootCtrl">
   <h1>ROOT</h1>
-  <ng-include src="'/static/user/partial/user-panel/user-panel.html'"></ng-include>
-  <ui-view></ui-view>
+  <div class="row">
+    <div class="col-md-3">
+      <ng-include src="'/static/user/partial/user-panel/user-panel.html'"></ng-include>
+      <ng-include src="'/static/partial/sidebar/sidebar.html'"></ng-include>
+    </div>
+    <div class="col-md-9">
+      <ui-view></ui-view>
+    </div>
+  </div>
 </div>

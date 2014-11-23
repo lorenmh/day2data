@@ -2,10 +2,24 @@
   <h1>USER PANEL</h1>
   <div class="login-status" ng-if="id">
     <div class="logged-in text">logged in as: <span class="username text">{{ id }}</span></div>
-    <a ng-click="logout()" class="logout button">logout</a>
+    <button ng-click="logout()" class="logout btn btn-default">logout</button>
   </div>
   <div class="login-status" ng-if="!id">
     <div class="logged-out text">not logged in</div>
-    <a ng-click="show_login()" class="login button">login</a>
+    <button ng-click="toggle_login_form()" class="login btn btn-{{ !login_form ? 'primary' : 'warning' }}">{{ login_form ? 'hide' : 'login'}}</button>
+
+    <form ng-if="login_form" ng-submit="submit()" ng-class="{errors: login_errors}">
+        <div ng-if="login_errors" class="login-errors">{{ login_errors }}</div>
+        <div class="form-group">
+          <label class="control-label" for="username-input">Username:</label>
+          <input type="text" class="form-control" id="username-input" />
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="password-input">Password:</label>
+          <input type="password" class="form-control" id="password-input" />
+        </div>
+      <button type="submit" class="login submit btn btn-success">submit</button>
+    </form>
+
   </div>
 </div>

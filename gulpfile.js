@@ -39,8 +39,9 @@ var app_paths = {
   "api":          "service/api.js",
   "root":         "partial/root/root.js",
   "home":         "partial/home/home.js",
+  "sidebar":      "partial/sidebar/sidebar.js",
   "user":         "user/user.js",
-  "user-info":    "user/partial/user-info/user-info.js",
+  "settings":    "user/partial/settings/settings.js",
   "user-panel":   "user/partial/user-panel/user-panel.js",
   "userService":  "user/service/userService.js"
 };
@@ -58,8 +59,9 @@ var ang_app = [
   "root",
   "home",
   "user",
-  "user-info",
+  "settings",
   "user-panel",
+  "sidebar",
   "userService"
 ];
 

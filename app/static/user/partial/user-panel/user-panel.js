@@ -4,15 +4,25 @@ angular.module('user').controller('UserPanelCtrl', [
   function($scope, userService) {
     $scope.id = userService.id;
     $scope.login_errors = userService.login_errors;
-    
-    var user_cb = function() {
-      $scope.id = userService.id;
-      $scope.login_errors = userService.login_errors;
-    };
-    userService.observer(user_cb);
+    $scope.login_form = false;
 
-    $scope.show_login = function() {
-      userService.login('foo', 'pswd');
+    userService.observe_error(function() {
+      $scope.login_errors = userService.login_errors;
+    });
+
+    userService.observe_login(function() {
+      $scope.id = userService.id;
+      $scope.login_form = false;
+    });
+
+    $scope.toggle_login_form = function() {
+      $scope.login_form = !$scope.login_form;
+    };
+
+    $scope.submit = function() {
+      var user = document.getElementById('username-input');
+      var password = document.getElementById('password-input');
+      userService.login(user.value, password.value);
     };
 
     $scope.logout = function() {

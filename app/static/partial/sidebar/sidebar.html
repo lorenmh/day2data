@@ -1,0 +1,7 @@
+<div ng-controller="SidebarCtrl">
+  <ul class="sidebar-links">
+    <li ng-repeat="link in links">
+      <a ui-sref="{{ link.route }}">{{ link.name }}</a>
+    </li>
+  </ul>
+</div>
