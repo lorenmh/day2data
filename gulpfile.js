@@ -4,12 +4,15 @@ var gulp    = require('gulp'),
     static  = require('connect-gzip-static'),
     logger  = require('morgan'),
     concat  = require('gulp-concat'),
+    uglify  = require('gulp-uglify'),
     gzip    = require('gulp-gzip'),
-    watch   = require('gulp-watch');
+    argv    = require('yargs').argv,
+    gulpif  = require('gulp-if');
 
 var APP_PATH = "./app/static/";
 var LIB_SCRIPTS_DESTINATION = APP_PATH + "dist/js/lib/";
 var APP_SCRIPTS_DESTINATION = APP_PATH + "dist/js/app/";
+var AMD_SCRIPTS_DESTINATION = APP_PATH + "dist/js/amd/";
 
 gulp.task('serve', function() {
   var server = connect();
@@ -22,6 +25,7 @@ var APP_ROOT = APP_PATH;
 
 var lib_paths = {
   "ang":        "angular/angular.min.js",
+  "require":    "requirejs/require.js",
   "ang-bs":     "angular-bootstrap/ui-bootstrap.min.js",
   "ang-cook":   "angular-cookies/angular-cookies.min.js",
   "ang-res":    "angular-resource/angular-resource.min.js",
@@ -41,9 +45,10 @@ var app_paths = {
   "home":         "partial/home/home.js",
   "sidebar":      "partial/sidebar/sidebar.js",
   "user":         "user/user.js",
-  "settings":    "user/partial/settings/settings.js",
+  "settings":     "user/partial/settings/settings.js",
   "user-panel":   "user/partial/user-panel/user-panel.js",
-  "userService":  "user/service/userService.js"
+  "userService":  "user/service/userService.js",
+  "chart":        "chart/chart.js"
 };
 
 // app_root = barebones stuff
@@ -51,14 +56,16 @@ var app_skel = [
   "ang",
   "ang-route",
   "ang-res",
+  "require"
 ];
 
-var ang_app = [
+var app_ang = [
   "app",
   "api",
   "root",
   "home",
   "user",
+  "chart",
   "settings",
   "user-panel",
   "sidebar",
@@ -71,7 +78,10 @@ var app_lib = [
   "ang-cook",
   "ang-util",
   "ang-bs",
-  "moment",
+  "moment"
+];
+
+var app_amd = [
   "d3"
 ];
 
@@ -94,34 +104,47 @@ var lib_arr_to_paths_arr = function(scrpts, script_paths, root_path) {
   return paths;
 };
 
+var prod = argv.prod !== undefined;
+
 gulp.task('concat_skel', function() {
   gulp.src(lib_arr_to_paths_arr(app_skel, lib_paths, LIB_ROOT))
     .pipe(concat( 'skel.js' ))
+    .pipe( gulpif( prod, uglify() ))
     .pipe(gulp.dest(LIB_SCRIPTS_DESTINATION))
-    .pipe(gzip())
-    .pipe(gulp.dest(LIB_SCRIPTS_DESTINATION));
+    .pipe( gulpif( prod, gzip() ))
+    .pipe( gulpif( prod, gulp.dest(LIB_SCRIPTS_DESTINATION) ));
 });
 
 gulp.task('concat_app', function() {
-  gulp.src(lib_arr_to_paths_arr(ang_app, app_paths, APP_ROOT))
+  gulp.src(lib_arr_to_paths_arr(app_ang, app_paths, APP_ROOT))
     .pipe(concat( 'app.js' ))
-    .pipe(gulp.dest(APP_SCRIPTS_DESTINATION))
-    .pipe(gzip())
-    .pipe(gulp.dest(APP_SCRIPTS_DESTINATION));
+    .pipe( gulpif( prod, uglify() ))
+    .pipe( gulp.dest(APP_SCRIPTS_DESTINATION) )
+    .pipe( gulpif( prod, gzip() ))
+    .pipe( gulpif( prod, gulp.dest(APP_SCRIPTS_DESTINATION) ));
 });
 
 gulp.task('concat_lib', function() {
   gulp.src(lib_arr_to_paths_arr(app_lib, lib_paths, LIB_ROOT))
-    .pipe(concat( 'lib.js' ))
-    .pipe(gulp.dest(LIB_SCRIPTS_DESTINATION))
-    .pipe(gzip())
-    .pipe(gulp.dest(LIB_SCRIPTS_DESTINATION));
+    .pipe( concat( 'lib.js' ) )
+    .pipe( gulpif( prod, uglify() ) )
+    .pipe( gulp.dest(LIB_SCRIPTS_DESTINATION) )
+    .pipe( gulpif( prod, gzip() ))
+    .pipe( gulpif( prod, gulp.dest(LIB_SCRIPTS_DESTINATION) ));
+});
+
+gulp.task('set_amd', function() {
+  gulp.src(lib_arr_to_paths_arr(app_amd, lib_paths, LIB_ROOT))
+    .pipe( gulpif( prod, uglify() ))
+    .pipe( gulp.dest(AMD_SCRIPTS_DESTINATION) )
+    .pipe( gulpif( prod, gzip() ))
+    .pipe( gulpif( prod, gulp.dest(AMD_SCRIPTS_DESTINATION) ));
 });
 
 gulp.task('watch_static', ['concat_app'], function() {
   gulp.watch("./app/static/**/*.js", ["concat_app"]);
 });
 
-gulp.task('concat_all', ['concat_skel', 'concat_app', 'concat_lib'], function() {
-  gulp.start('concat_skel', 'concat_app', 'concat_lib');
+gulp.task('all', ['concat_skel', 'concat_app', 'concat_lib', 'set_amd'], function() {
+  gulp.start('concat_skel', 'concat_app', 'concat_lib', 'set_amd');
 });

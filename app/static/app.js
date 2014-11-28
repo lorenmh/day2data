@@ -1,4 +1,4 @@
-angular.module('app', ['ui.router', 'user']);
+angular.module('app', ['ui.router', 'user', 'chart']);
 
 angular.module('app').constant('path', {
   app_root: "/static/",
@@ -89,7 +89,6 @@ angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
 // check authorization states and redirect if authorizations not met
 angular.module('app').run(['$rootScope', '$state', 'userService', 
   function($rootScope, $state, userService){
-    console.log('c');
     $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
       if ( toState.data.auth === 'User' && !userService.is_logged_in() ) {
         event.preventDefault();
