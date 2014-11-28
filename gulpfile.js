@@ -55,8 +55,7 @@ var app_paths = {
 var app_skel = [
   "ang",
   "ang-route",
-  "ang-res",
-  "require"
+  "ang-res"
 ];
 
 var app_ang = [
@@ -75,15 +74,16 @@ var app_ang = [
 var app_lib = [
   "$",
   "bs",
+  "d3",
   "ang-cook",
   "ang-util",
   "ang-bs",
   "moment"
 ];
 
-var app_amd = [
+/*var app_amd = [
   "d3"
-];
+];*/
 
 var lib_arr_to_paths_arr = function(scrpts, script_paths, root_path) {
   var paths, i, path;
@@ -133,18 +133,18 @@ gulp.task('concat_lib', function() {
     .pipe( gulpif( prod, gulp.dest(LIB_SCRIPTS_DESTINATION) ));
 });
 
-gulp.task('set_amd', function() {
+/*gulp.task('set_amd', function() {
   gulp.src(lib_arr_to_paths_arr(app_amd, lib_paths, LIB_ROOT))
     .pipe( gulpif( prod, uglify() ))
     .pipe( gulp.dest(AMD_SCRIPTS_DESTINATION) )
     .pipe( gulpif( prod, gzip() ))
     .pipe( gulpif( prod, gulp.dest(AMD_SCRIPTS_DESTINATION) ));
-});
+});*/
 
 gulp.task('watch_static', ['concat_app'], function() {
   gulp.watch("./app/static/**/*.js", ["concat_app"]);
 });
 
-gulp.task('all', ['concat_skel', 'concat_app', 'concat_lib', 'set_amd'], function() {
-  gulp.start('concat_skel', 'concat_app', 'concat_lib', 'set_amd');
+gulp.task('all', ['concat_skel', 'concat_app', 'concat_lib'], function() {
+  gulp.start('concat_skel', 'concat_app', 'concat_lib');
 });
