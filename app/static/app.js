@@ -41,8 +41,12 @@ angular.module('app').constant('path', {
 // the root state is a parent route such that all routes can be children of it
 // data will hold additional info about that state
 // data.auth will hold authorization required to view certain paths
-angular.module('app').config(['$stateProvider', '$urlRouterProvider', 'path',
-  function($stateProvider, $urlRouterProvider, path) {
+angular.module('app').config(
+  ['$stateProvider', '$urlRouterProvider', '$locationProvider', 'path',
+  function($stateProvider, $urlRouterProvider, $locationProvider, path) {
+    
+    $locationProvider.html5Mode(true);
+
     $stateProvider
       .state('root', {
         resolve: {
