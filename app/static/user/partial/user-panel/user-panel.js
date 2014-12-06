@@ -1,6 +1,5 @@
 angular.module('user').controller('UserPanelCtrl', [
-  '$scope',
-  'userService',
+          '$scope', 'userService',
   function($scope, userService) {
     $scope.id = userService.id;
     $scope.login_errors = userService.login_errors;

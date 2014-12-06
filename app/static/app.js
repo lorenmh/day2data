@@ -69,7 +69,7 @@ angular.module('app').config(
       })
       .state('root.dash', {
         url: '/dashboard',
-        templateUrl: path.join_root('partial/home/home.html'),
+        templateUrl: path.join_root('partial/dash/dash.html'),
         data: { auth: 'User' }
       })
       .state('root.settings', {
@@ -79,19 +79,20 @@ angular.module('app').config(
       })
       .state('root.chart', {
         url: '/charts',
-        templateUrl: path.join_root('partial/home/home.html'),
+        templateUrl: path.join_root('chart/partial/chart/list/list.html'),
         data: { auth: 'User' }
       })
       .state('root.record', {
         url: '/records',
-        templateUrl: path.join_root('partial/home/home.html'),
+        templateUrl: path.join_root('chart/partial/record/list/list.html'),
         data: { auth: 'User' }
       });
     $urlRouterProvider.otherwise('/');
 }]);
 
 // check authorization states and redirect if authorizations not met
-angular.module('app').run(['$rootScope', '$state', 'userService', 
+angular.module('app').run(
+  ['$rootScope', '$state', 'userService', 
   function($rootScope, $state, userService){
     $rootScope.$on('$stateChangeSuccess', function(event, toState, toParams, fromState, fromParams) {
       if ( toState.data.auth === 'User' && !userService.is_logged_in() ) {

@@ -39,16 +39,21 @@ var lib_paths = {
 };
 
 var app_paths = {
-  "app":          "app.js",
-  "api":          "service/api.js",
-  "root":         "partial/root/root.js",
-  "home":         "partial/home/home.js",
-  "sidebar":      "partial/sidebar/sidebar.js",
-  "user":         "user/user.js",
-  "settings":     "user/partial/settings/settings.js",
-  "user-panel":   "user/partial/user-panel/user-panel.js",
-  "userService":  "user/service/userService.js",
-  "chart":        "chart/chart.js"
+  "app":            "app.js",
+  "api":            "service/api.js",
+  "root":           "partial/root/root.js",
+  "home":           "partial/home/home.js",
+  "dash":           "partial/dash/dash.js",
+  "sidebar":        "partial/sidebar/sidebar.js",
+  "user":           "user/user.js",
+  "settings":       "user/partial/settings/settings.js",
+  "user-panel":     "user/partial/user-panel/user-panel.js",
+  "userService":    "user/service/userService.js",
+  "chart":          "chart/chart.js",
+  "chart-list":     "chart/partial/chart/list/list.js",
+  "chart-detail":   "chart/partial/chart/detail/detail.js",
+  "record-list":    "chart/partial/record/list/list.js",
+  "record-detail":  "chart/partial/record/detail/detail.js",
 };
 
 // app_root = barebones stuff
@@ -63,12 +68,17 @@ var app_ang = [
   "api",
   "root",
   "home",
+  "dash",
   "user",
   "chart",
   "settings",
   "user-panel",
   "sidebar",
-  "userService"
+  "userService",
+  "chart-list",
+  "chart-detail",
+  "record-list",
+  "record-detail"
 ];
 
 var app_lib = [

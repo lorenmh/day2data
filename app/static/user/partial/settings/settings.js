@@ -1,3 +1,5 @@
-angular.module('user').controller('SettingsCtrl', function($scope) {
-  $scope.user = "some user info var";
-});
+angular.module('user').controller('SettingsCtrl', [
+          '$scope',
+  function($scope) {
+    $scope.test = "user settings scope";
+}]);
