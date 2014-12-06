@@ -12,8 +12,12 @@ from redis_auth import auth_token_valid, touch_auth_token
 def api_error_message(text):
     return json.dumps({'error': text})
 
+@app.route('/')
+def root():
+    return render_template('index.html')
+
 @app.route('/<path:path>')
-def index(path):
+def all(path):
     return render_template('index.html')
 
 @app.route('/static/<path:path>')
