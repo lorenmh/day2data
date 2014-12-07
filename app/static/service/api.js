@@ -4,23 +4,23 @@ angular.module('app').factory('api', [
     var api = {};
 
     api.get = function(uri) {
-      return $http.get(path.join_api(uri));
+      return $http.get(uri);
     };
 
     api.post = function(uri, data) {
-      return $http.post(path.join_api(uri), JSON.stringify(data));
+      return $http.post(uri, JSON.stringify(data));
     };
 
     api.init = function() {
-      return api.get(path.uri.init);
+      return api.get(path.api.route.init());
     };
 
     api.logout = function() {
-      return api.get(path.uri.logout);
+      return api.get(path.api.route.logout());
     };
 
     api.login = function(id, password) {
-      return api.post(path.uri.login, {id: id, password: password});
+      return api.post(path.api.route.login(), {id: id, password: password});
     };
 
     return api;

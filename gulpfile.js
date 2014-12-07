@@ -151,8 +151,8 @@ gulp.task('concat_lib', function() {
     .pipe( gulpif( prod, gulp.dest(AMD_SCRIPTS_DESTINATION) ));
 });*/
 
-gulp.task('watch_static', ['concat_app'], function() {
-  gulp.watch("./app/static/**/*.js", ["concat_app"]);
+gulp.task('watch', ['all'], function() {
+  gulp.watch("./app/static/**/*.js", ["all"]);
 });
 
 gulp.task('all', ['concat_skel', 'concat_app', 'concat_lib'], function() {

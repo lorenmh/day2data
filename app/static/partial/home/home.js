@@ -1,8 +1,9 @@
 angular.module('app').controller('HomeCtrl', [
-          '$scope', 'api',
-  function($scope, api){
-    $scope.world = "World";
-    api.get('u/foo/').success(function(d) {
-      $scope.world = d;
+          '$scope', 'api', 'path',
+  function($scope, api, path){
+    $scope.test = "World";
+    api.get(path.api.build({ user: 'foo', record: 1, set: 1})).success(function(d) {
+      console.log(d);
+      $scope.test = d;
     });
 }]);

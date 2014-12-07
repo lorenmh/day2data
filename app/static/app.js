@@ -1,41 +1,92 @@
 angular.module('app', ['ui.router', 'user', 'chart']);
 
-angular.module('app').constant('path', {
-  app_root: "/static/",
-  api:      "/api/",
-  uri: {
-    home:   "/",
-    init:   "init",
-    login:  "login",
-    logout: "logout"
-  },
-  login_redirect:  "root.dash",
-  logout_redirect: "root.home",
-  links: {
-    default: [
-      { name: "Home",         route: "root.home" }
-    ],
-    user: [
-      { name: "Dashboard",    route: "root.dash" },
-      { name: "My Charts",    route: "root.chart" },
-      { name: "My Records",   route: "root.record" },
-      { name: "Settings",     route: "root.settings" }
-    ]
-  },
-  join: function(base_path, sub_path) {
-    if (sub_path.charAt(0) === "/") {
-      return base_path + sub_path.slice(1);
-    } else {
-      return base_path + sub_path;
+angular.module('app').constant('path', 
+(function() {
+  var path = {
+    root: "/static/",
+    api: {
+      root: "/api/",
+      sub: {
+        init:   "init",
+        login:  "login",
+        logout: "logout",
+        user: "u",
+        record: "r",
+        set: "s",
+        data: "d"
+      },
+      uri: {
+        user: function(id) {
+          return path.api.sub.user + '/' + (id !== undefined ? id + '/' : '');
+        },
+        record: function(id) {
+          return path.api.sub.record + '/' + (id !== undefined ? id + '/' : '');
+        },
+        set: function(id) {
+          return path.api.sub.set + '/' + (id !== undefined ? id + '/' : '');
+        },
+        data: function(id) {
+          return path.api.sub.data + '/' + (id !== undefined ? id + '/' : '');
+        },
+      },
+      route: {
+        init:   function() { return path.api.join_root(path.api.sub.init); },
+        login:  function() { return path.api.join_root(path.api.sub.login); },
+        logout: function() { return path.api.join_root(path.api.sub.logout); }
+      },
+      build: function(args) {
+        var sub_paths = [];
+        if (args.user !== undefined) {
+          sub_paths.push(path.api.uri.user(args.user));
+          if (args.record !== undefined) {
+            sub_paths.push(path.api.uri.record(args.record));
+            if (args.set !== undefined) {
+              sub_paths.push(path.api.uri.set(args.set));
+              if (args.data !== undefined) {
+                sub_paths.push(path.api.uri.data(args.data));
+              }
+            }
+          }
+        }
+        return path.api.join_paths_root(sub_paths);
+      },
+      join_root: function(sub_path) {
+        return path.join(path.api.root, sub_path);
+      },
+      join_paths_root: function(sub_paths) {
+        return path.api.join_root(sub_paths.join(''));
+      }
+    },
+    uri: {
+      home:   "/"
+    },
+    login_redirect:  "root.dash",
+    logout_redirect: "root.home",
+    links: {
+      default: [
+        { name: "Home",         route: "root.home" }
+      ],
+      user: [
+        { name: "Dashboard",    route: "root.dash" },
+        { name: "My Charts",    route: "root.chart" },
+        { name: "My Records",   route: "root.record" },
+        { name: "Settings",     route: "root.settings" }
+      ]
+    },
+    join: function(base_path, sub_path) {
+      if (sub_path.charAt(0) === "/") {
+        return base_path + sub_path.slice(1);
+      } else {
+        return base_path + sub_path;
+      }
+    },
+    join_root: function(sub_path) {
+      return path.join(path.root, sub_path);
     }
-  },
-  join_root: function(sub_path) {
-    return this.join(this.app_root, sub_path);
-  },
-  join_api: function(sub_path) {
-    return this.join(this.api, sub_path);
-  }
-});
+  };
+  window.test = path;
+  return path;
+}()));
 
 // angular ui routing via stateProvider
 // the root state is a parent route such that all routes can be children of it
