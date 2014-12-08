@@ -14,7 +14,7 @@ def user(usr):
     srl = {
         "user": {
             "id": usr.username,
-            "timestamp": dt_to_ms(usr.timestamp),
+            "time": dt_to_ms(usr.timestamp),
             "about": usr.about,
         }
     }
@@ -46,8 +46,8 @@ def record_short(rcd):
             "owner": user_short(User.query.get(rcd.owner)),
             "title": rcd.title,
             "text": rcd.text,
-            "timestamp": dt_to_ms(rcd.timestamp),
-            "set_count": rcd.get_set_count()
+            "time": dt_to_ms(rcd.timestamp),
+            "count": rcd.get_set_count()
         }
     }
     return srl
@@ -73,9 +73,9 @@ def set_short(set):
             "id": set.res_id,
             "title": set.title,
             "text": set.text,
-            "timestamp": dt_to_ms(set.timestamp),
+            "time": dt_to_ms(set.timestamp),
             "type": DATA_TYPE_STR[set.type],
-            "data_count": set.get_data_count()
+            "count": set.get_data_count()
         }
     }
 
@@ -113,14 +113,14 @@ def data(set, data):
 def count_data_short(data):
     srl = {
         "id": data.res_id,
-        "timestamp": dt_to_ms(data.timestamp)
+        "time": dt_to_ms(data.timestamp)
     }
     return srl
 
 def value_data_short(data):
     srl = {
         "id": data.res_id,
-        "timestamp": dt_to_ms(data.timestamp),
+        "time": dt_to_ms(data.timestamp),
         "value": data.value
     }
     return srl
@@ -136,7 +136,7 @@ def timed_data_short(data):
 def choice_data_short(data):
     srl = {
         "id": data.res_id,
-        "timestamp": dt_to_ms(data.timestamp),
+        "time": dt_to_ms(data.timestamp),
         "choice": data.choice
     }
     return srl

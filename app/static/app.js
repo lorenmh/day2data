@@ -48,7 +48,9 @@ angular.module('app').constant('path',
             }
           }
         }
-        return path.api.join_paths_root(sub_paths);
+        var p = path.api.join_paths_root(sub_paths);
+        console.log('built path ' + p + ' from ' + args);
+        return p;
       },
       join_root: function(sub_path) {
         return path.join(path.api.root, sub_path);
@@ -87,6 +89,11 @@ angular.module('app').constant('path',
   window.test = path;
   return path;
 }()));
+
+angular.module('app').config(['$resourceProvider', function($resourceProvider) {
+  // Don't strip trailing slashes from calculated URLs
+  $resourceProvider.defaults.stripTrailingSlashes = false;
+}]);
 
 // angular ui routing via stateProvider
 // the root state is a parent route such that all routes can be children of it

@@ -1,1 +1,1 @@
-angular.module('chart', ['ui.router']);
+angular.module('chart', ['ui.router', 'ngResource']);
