@@ -4,6 +4,7 @@ from datetime import datetime
 import os, binascii, bcrypt, re
 
 VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
+VALID_EMAIL_RE = "^.+@.+\..+$"
 VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{3,16}$"
 VALID_UNIT_SHORT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{,12}$"
 # 1 - 32 chars, valid a-b-c, not -a-b or a-b- or a--b
@@ -49,6 +50,7 @@ class User(db.Model):
     __tablename__ = "user"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(16), unique=True)
+    email = db.Column(db.String(128), nullable=True, unique=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     about = db.Column(db.Text, nullable=True)
     password = db.Column(db.String(64))
@@ -66,8 +68,45 @@ class User(db.Model):
     def get_record_all(self):
         return Record.query.filter_by(owner=self.id).all()
 
-    def __init__(self, username, password, timestamp=None, about=None):
+    @staticmethod
+    def from_values(values):
+        u = User(username=values.get('username'), password=values.get('password'))
+        u.create()
+        return u
+
+    @staticmethod
+    def validate(values=None):
+        errors = {}
+        if isinstance(values, dict):
+            username, email, password = values.get('username'), values.get('email'), values.get('password')
+            if username == None:
+                errors['username'] = 'Username is required'
+            if password == None:
+                errors['password'] = 'Password is required'
+            if username != None and password != None:
+                if User.with_username(username) != None:
+                    errors['username'] = 'Username is already in use'
+                if re.search(VALID_PSWD_RE, password) == None:
+                    errors['password'] = 'Invalid password'
+            if email != None:
+                if not re.search(VALID_EMAIL_RE, email):
+                    errors['email'] = 'Invalid email'
+                elif email != '' and User.with_email(email) != None:
+                    errors['email'] = 'Email is already in use'
+        else:
+            errors['username'] = 'Username is required'
+            errors['password'] = 'Password is required'
+        if errors == {}:
+            return True
+        else:
+            return errors
+
+
+    def __init__(self, username, password, email=None, timestamp=None, about=None):
         self.username = username
+        if email != '':
+            email = None
+        self.email = email
         self.password = self.hash_password(password)
         self.timestamp = timestamp
         self.about = about
@@ -78,6 +117,10 @@ class User(db.Model):
     @staticmethod
     def with_username(username):
         return User.query.filter_by(username=username).first()
+
+    @staticmethod
+    def with_email(email):
+        return User.query.filter_by(email=email).first()
 
     @staticmethod
     def valid_password(pswd):
@@ -554,6 +597,13 @@ class Record(db.Model):
     def __repr__(self):
         return "<Record id:%s owner.id:%s res_id:%s>" % (self.id, self.owner,
             self.res_id)
+
+    @staticmethod
+    def from_values(user, values):
+        title, text, permissions_view = values.get('title'), values.get('text'), values.get('permissions_view')
+        r = Record(title=title, owner=user.id, text=text, permissions_view=permissions_view)
+        r.create()
+        return r
 
     @staticmethod
     def validate(values=None):

@@ -24,6 +24,12 @@ def all(path):
 def static_file(path):
     return app.send_static_file(os.path.join('static', path))
 
+def response_error_400(msg):
+    return json.dumps({'error':True, 'message': msg}), 400
+
+def response_success_200(msg):
+    return json.dumps({'success': True, 'message': msg}), 200
+
 @app.route('/api/login', methods=['POST'])
 def login():
     address = request.remote_addr
@@ -34,15 +40,15 @@ def login():
         if user:
             if user.matches_password(password):
                 session['id'] = username
-                return json.dumps(serializers.user(user))
+                return response_success_200(serializers.user(user))
             else:
                 set_failed_login(address)
-                return api_error_message("username password combination incorrect"), 400
+                return response_error_400("username password combination incorrect")
         else:
             set_failed_login(address)
-            return api_error_message("username password combination incorrect"), 400
+            return response_error_400("username password combination incorrect")
     else:
-        return api_error_message("maximum number of login attempts exceeded, please try again later"), 400
+        return response_error_400("maximum number of login attempts exceeded, please try again later")
 
 @app.route('/api/logout')
 def logout():
@@ -59,11 +65,33 @@ def init():
 
 # get: return user details
 # put / post: update user details
-@app.route('/api/u/<user_id>/')
+@app.route('/api/u/', methods=['POST'])
+def api_user_new():
+    values = request.get_json(force=True)
+    validation = User.validate(values)
+    if validation == True:
+        user = User.from_values(values)
+        session['id'] = user.username
+        return response_success_200(serializers.user(user))
+    else:
+        return response_error_400(validation)
+
+# get: return user details
+# put / post: update user details
+@app.route('/api/u/<user_id>/', methods=['GET'])
 @get_user_or_404
 def api_user(user):
-    #user = User.with_username(user_id)
-    return json.dumps(serializers.user(user))
+    if request.method == 'GET':
+        return json.dumps(serializers.user(user))
+    else:
+        values = request.get_json(force=True)
+        validation = User.validate(values)
+        if validation == True:
+            user = User.from_values(values)
+            session['id'] = user.username
+            return response_success_200(serializers.user(user))
+        else:
+            return response_error_400(validation)
 
 # get: return all record
 # post: create new record
@@ -76,12 +104,10 @@ def api_record_index(user):
         values = request.get_json(force=True)
         validation = Record.validate(values)
         if validation == True:
-            title, text, permissions_view = values.get('title'), values.get('text'), values.get('permissions_view')
-            rcrd = Record(title=title, owner=user.id, text=text, permissions_view=permissions_view)
-            rcrd.create()
-            return json.dumps({ 'success': True, 'record': serializers.record(rcrd) })
+            r = Record.from_values(values)
+            return response_success_200(serializers.record(r))
         else:
-            return json.dumps({ 'errors': validation })
+            return response_error_400(validation)
 
 # get: return record
 # put / post: update record
@@ -109,9 +135,9 @@ def api_set_index(user, record):
         validation = Set.validate(values)
         if validation == True:
             data_set = Set.from_values(record=record, values=values)
-            return json.dumps({ 'success': True, 'set': serializers.set(data_set) })
+            return response_success_200(serializers.set(data_set))
         else:
-            return json.dumps({ 'errors': validation })
+            return response_error_400(validation)
 
 
 # get: return set
@@ -138,9 +164,9 @@ def api_data_index(user, record, set):
         validation = DataClass.validate(set=set, values=values)
         if validation == True:
             data = DataClass.from_values(set=set, values=values)
-            return json.dumps({ 'success': True, 'data': serializers.data(set, data) })
+            return response_success_200(serializers.data(set, data))
         else:
-            return json.dumps({ 'errors': validation })
+            return response_error_400(validation)
 
 # get: return data
 # put / post: update data

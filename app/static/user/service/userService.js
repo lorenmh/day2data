@@ -45,8 +45,8 @@ angular.module('user').factory('userService', ['$state', 'path', 'api',
       notify_login();
     };
 
-    var set_login_errors = function(d) {
-      user.login_errors = d.error;
+    var set_login_errors = function(errors) {
+      user.login_errors = errors;
       notify_error();
     };
 
@@ -63,11 +63,11 @@ angular.module('user').factory('userService', ['$state', 'path', 'api',
     user.login = function(id, password) {
       api.login(id, password)
         .success(function(d) {
-          user.init(d);
+          user.init(d.message);
           $state.go(path.login_redirect);
         })
         .error(function(d) {
-          set_login_errors(d);
+          set_login_errors(d.message);
         });
     };
 
