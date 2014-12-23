@@ -1,4 +1,4 @@
-from flask import render_template, send_from_directory, request, session
+from flask import render_template, send_from_directory, request, session, Response, make_response
 from app import app, db
 from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
     get_data_or_404, get_post_data)
@@ -6,44 +6,49 @@ import serializers, json, os
 from models import User, Record, Set, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
-from api_response import response_success_200, response_error_400
+from api_response import response_success_post, response_error_post
 
 #r_key = redis.StrictRedis(host='localhost', port=6379, db=1)
 
-def api_error_message(text):
-    return json.dumps({'error': text})
+def xsrf_cookie_response(template):
+    res = make_response(render_template(template), 200)
+    token = touch_auth_token(request.cookies.get('XSRF-TOKEN'))
+    res.set_cookie('XSRF-TOKEN', token)
+    return res
 
 @app.route('/')
 def root():
-    return render_template('index.html')
-
-@app.route('/<path:path>')
-def all(path):
-    return render_template('index.html')
+    return xsrf_cookie_response('index.html')
 
 @app.route('/static/<path:path>')
 def static_file(path):
     return app.send_static_file(os.path.join('static', path))
 
+#returns the app template if the route doesnt start with api or static
+@app.route('/<regex("^(?!(?:api|static).*).*$"):path>')
+def all(path):
+    return xsrf_cookie_response('index.html')
+
 @app.route('/api/login', methods=['POST'])
-def login():
+@get_post_data
+def login(values):
     address = request.remote_addr
     if can_attempt_login(address):
-        username = request.json["id"]
-        password = request.json["password"]
+        username = values.get('id')
+        password = values.get('password')
         user = User.with_username(username)
         if user:
             if user.matches_password(password):
                 session['id'] = username
-                return response_success_200(serializers.user(user))
+                return response_success_post(serializers.user(user))
             else:
                 set_failed_login(address)
-                return response_error_400("username password combination incorrect")
+                return response_error_post("username password combination incorrect")
         else:
             set_failed_login(address)
-            return response_error_400("username password combination incorrect")
+            return response_error_post("username password combination incorrect")
     else:
-        return response_error_400("maximum number of login attempts exceeded, please try again later")
+        return response_error_post("maximum number of login attempts exceeded, please try again later")
 
 @app.route('/api/logout')
 def logout():
@@ -67,9 +72,9 @@ def api_user_new(values=None):
     if validation == True:
         user = User.from_values(values)
         session['id'] = user.username
-        return response_success_200(serializers.user(user))
+        return response_success_post(serializers.user(user))
     else:
-        return response_error_400(validation)
+        return response_error_post(validation)
 
 # get: return user details
 # put / post: update user details
@@ -84,9 +89,9 @@ def api_user(user):
         if validation == True:
             user = User.from_values(values)
             session['id'] = user.username
-            return response_success_200(serializers.user(user))
+            return response_success_post(serializers.user(user))
         else:
-            return response_error_400(validation)
+            return response_error_post(validation)
 
 # get: return all record
 # post: create new record
@@ -100,9 +105,9 @@ def api_record_index(user, values=None):
         validation = Record.validate(values)
         if validation == True:
             r = Record.from_values(values)
-            return response_success_200(serializers.record(r))
+            return response_success_post(serializers.record(r))
         else:
-            return response_error_400(validation)
+            return response_error_post(validation)
 
 # get: return record
 # put / post: update record
@@ -131,9 +136,9 @@ def api_set_index(user, record, values=None):
         validation = Set.validate(values)
         if validation == True:
             data_set = Set.from_values(record=record, values=values)
-            return response_success_200(serializers.set(data_set))
+            return response_success_post(serializers.set(data_set))
         else:
-            return response_error_400(validation)
+            return response_error_post(validation)
 
 
 # get: return set
@@ -161,9 +166,9 @@ def api_data_index(user, record, set, values=None):
         validation = DataClass.validate(set=set, values=values)
         if validation == True:
             data = DataClass.from_values(set=set, values=values)
-            return response_success_200(serializers.data(set, data))
+            return response_success_post(serializers.data(set, data))
         else:
-            return response_error_400(validation)
+            return response_error_post(validation)
 
 # get: return data
 # put / post: update data

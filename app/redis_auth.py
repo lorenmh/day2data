@@ -15,19 +15,15 @@ def dt_to_seconds(dt):
 def dt_to_ut(dt):
     return int(dt_to_seconds(dt) * 1000)
 
-def create_salt(length):
+def create_token(length):
     return binascii.b2a_hex(os.urandom(int(length / 2)))
 
 def touch_auth_token(token=None):
     if token != None:
         r_auth.delete(token)
-
     now_ut = dt_to_ut(datetime.utcnow())
-    salt = create_salt(6)
-    token = hashlib.md5(secret + str(now_ut) + salt).hexdigest()
-
+    token = create_token(32)
     r_auth.set(token, json.dumps(now_ut))
-
     return token
 
 def auth_token_valid(token):
