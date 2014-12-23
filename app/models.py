@@ -4,8 +4,11 @@ from datetime import datetime
 import os, binascii, bcrypt, re
 
 VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
-VALID_USERNAME_RE = "^[\w\-]{3,16}$"
-VALID_UNIT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{1,10}$"
+VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{3,16}$"
+VALID_UNIT_SHORT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{,12}$"
+# 1 - 32 chars, valid a-b-c, not -a-b or a-b- a--b
+# matches if false
+VALID_TITLE_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{1,32}$"
 
 DATA_TYPE_INT = {
     "count": 1,
@@ -67,35 +70,17 @@ class User(db.Model):
 
     @staticmethod
     def valid_password(pswd):
-        return re.match(VALID_PSWD_RE, pswd) != None
+        return re.search(VALID_PSWD_RE, pswd) != None
 
     @staticmethod
     def valid_username(username):
-        return re.match(VALID_USERNAME_RE, username) != None
+        return re.search(VALID_USERNAME_RE, username) != None
 
     def hash_password(self, pswd):
         return bcrypt.hashpw(pswd.encode('utf-8'), bcrypt.gensalt(10))
 
     def matches_password(self, str):
         return bcrypt.hashpw(str.encode('utf-8'), self.password.encode('utf-8')) == self.password
-
-class TimePoint(db.Model):
-    __tablename__ = "timepoint"
-    id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def create(self):
-        self.save()
-
-    def __init__(self, timestamp=None):
-        self.timestamp = timestamp
-
-    def __repr__(self):
-        return "<TimePoint id:%d>" % self.id
 
 # finds the current max res_id for this set
 def next_res_id_for_data(mdl, set):
@@ -121,6 +106,10 @@ class CountData(db.Model):
     def create(self):
         self.res_id = next_res_id_for_data(CountData, self.set)
         self.save()
+
+    @staticmethod
+    def validate(set=None, values=None):
+        return True
 
     def __init__(self, set, timestamp=None, text=None):
         self.set = set
@@ -151,6 +140,25 @@ class ValueData(db.Model):
         self.res_id = next_res_id_for_data(ValueData, self.set)
         self.save()
 
+    @staticmethod
+    def validate(set=None, values=None):
+        errors = {}
+        if isinstance(values, dict):
+            value = values.get('value')
+            if value == None:
+                errors['value'] = 'Value is required'
+            else:
+                try:
+                    float(value)
+                except:
+                    errors['value'] = 'Invalid value'
+        else:
+            errors['value'] = 'Value is required'
+        if errors == {}:
+            return True
+        else:
+            return errors
+
     def __init__(self, set, timestamp=None, text=None, value=None):
         self.set = set
         self.timestamp = timestamp
@@ -169,8 +177,8 @@ class TimedData(db.Model):
     
     text = db.Column(db.Text, nullable=True)
 
-    start = db.Column(db.Integer, db.ForeignKey('timepoint.id'), nullable=True)
-    stop = db.Column(db.Integer, db.ForeignKey('timepoint.id'), nullable=True)
+    start = db.Column(db.DateTime, default=datetime.utcnow)
+    stop = db.Column(db.DateTime, default=datetime.utcnow)
 
     def save(self):
         db.session.add(self)
@@ -179,6 +187,38 @@ class TimedData(db.Model):
     def create(self):
         self.res_id = next_res_id_for_data(TimedData, self.set)
         self.save()
+
+    @staticmethod
+    def validate(set=None, values=None):
+        errors = {}
+        if isinstance(values, dict):
+            start, stop = values.get('start'), values.get('stop')
+            if start == None:
+                errors['start'] = 'Start is required'
+            if stop == None:
+                errors['stop'] = 'Stop is required'
+            if start != None and stop != None:
+                exception = False
+                try:
+                    int(start)
+                except:
+                    exception = True
+                    errors['start'] = 'Invalid start'
+                try:
+                    int(stop)
+                except:
+                    exception = True
+                    errors['stop'] = 'Invalid stop'
+                if not exception:
+                    if start > stop:
+                        errors['stop'] = 'Stop must be greater than or equal to start'
+        else:
+            errors['start'] = 'Start is required'
+            errors['stop'] = 'Stop is required'
+        if errors == {}:
+            return True
+        else:
+            return errors
 
     def __init__(self, set, text=None, start=None, stop=None):
         self.set = set
@@ -207,6 +247,10 @@ class Choice(db.Model):
     @staticmethod
     def for_set(set):
         return Choice.query.filter_by(set=set).all()
+
+    @staticmethod
+    def list_for_set(set):
+        return [ choice.res_id for choice in Choice.for_set(set) ]
 
     @staticmethod
     def get(id):
@@ -250,6 +294,27 @@ class ChoiceData(db.Model):
         self.res_id = next_res_id_for_data(ChoiceData, self.set)
         self.save()
 
+    @staticmethod
+    def validate(set=None, values=None):
+        errors = {}
+        if isinstance(values, dict):
+            choice, text = values.get('choice')
+            if choice == None:
+                errors['choice'] = 'Choice is required'
+            else:
+                try:
+                    choice = int(choice)
+                    if choice not in Choice.list_for_set(set):
+                        errors['choice'] = 'Invalid choice'
+                except:
+                    errors['choice'] = 'Invalid choice'
+        else:
+            errors['choice'] = 'Choice is required'
+        if errors == {}:
+            return True
+        else:
+            return errors
+
     def __init__(self, set, choice, timestamp=None, text=None):
         self.set = set
         self.choice = choice
@@ -260,6 +325,12 @@ class ChoiceData(db.Model):
         return "<ChoiceData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
             self.res_id)
 
+DATA_TYPE_CLASS = {
+    1: CountData,
+    2: ValueData,
+    3: TimedData,
+    4: ChoiceData
+}
 
 # each set should have relative resource ids (relative to record)
 def next_res_id_for_set(record):
@@ -317,6 +388,38 @@ class Set(db.Model):
         mdl = data_model_from_type(self.type)
         return mdl.query.filter_by(set=self.id).count()
 
+    @staticmethod
+    def validate(values=None):
+        errors = {}
+        if isinstance(values, dict):
+            title, type, unit, unit_short = values.get('title'), values.get('type'), values.get('unit'), values.get('unit_short')
+            if title == None:
+                errors['title'] = 'Title is required'
+            elif re.search(VALID_TITLE_RE, title) == None:
+                errors['title'] = 'Invalid title'
+            if type == None:
+                 errors['type'] = 'Type is required'
+            else:
+                try:
+                    type = int(type)
+                    if type not in DATA_TYPE_STR:
+                        errors['type'] = 'Invalid type'
+                except:
+                    errors['type'] = 'Invalid type'
+            if unit != None:
+                if re.search(VALID_TITLE_RE, unit) == None:
+                    errors['unit'] = 'Invalid unit'
+            if unit_short != None:
+                if re.search(VALID_UNIT_SHORT_RE, unit_short) == None:
+                    errors['unit_short'] = 'Invalid unit abbreviation'
+        else:
+            errors['title'] = 'Title is required'
+            errors['type'] = 'Type is required'
+        if errors == {}:
+            return True
+        else:
+            return errors
+
     def __init__(self, record, type, title, timestamp=None,
             text=None, unit=None, unit_short=None):
         self.record = record
@@ -366,8 +469,10 @@ class Record(db.Model):
     def get_set_all(self):
         return Set.query.filter_by(record=self.id).all()
 
-    def __init__(self, owner, title, permissions_view=PERMISSIONS_VIEW_INT['private'],
+    def __init__(self, owner, title, permissions_view=None,
             timestamp=None, text=None):
+        if permissions_view == None:
+            permissions_view = PERMISSIONS_VIEW_INT['private']
         self.owner = owner
         self.title = title
         self.permissions_view = permissions_view
@@ -375,5 +480,25 @@ class Record(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<Record id:%d owner.id:%d res_id:%d>" % (self.id, self.owner,
+        return "<Record id:%s owner.id:%s res_id:%s>" % (self.id, self.owner,
             self.res_id)
+
+    @staticmethod
+    def validate(values=None):
+        errors = {}
+        if isinstance(values, dict):
+            title = values.get('title')
+            permissions_view = values.get('permissions')
+            if title == None:
+                errors['title'] = 'Title is required'
+            elif re.search(VALID_TITLE_RE, title) == None:
+                errors['title'] = 'Invalid title'
+            if permissions_view != None:
+                if permissions_view not in PERMISSIONS_VIEW_STR:
+                    errors['permissions'] = 'Invalid permissions'
+        else:
+            errors['title'] = 'Title is required'
+        if errors == {}:
+            return True
+        else:
+            return errors

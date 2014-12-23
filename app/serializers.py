@@ -12,11 +12,9 @@ def dt_to_ms(dt):
 
 def user(usr):
     srl = {
-        "user": {
-            "id": usr.username,
-            "time": dt_to_ms(usr.timestamp),
-            "about": usr.about,
-        }
+        "id": usr.username,
+        "time": dt_to_ms(usr.timestamp),
+        "about": usr.about,
     }
     return srl
 
@@ -36,19 +34,17 @@ def user_records(usr):
 
 def record(rcd):
     srl = record_short(rcd)
-    srl["record"]["sets"] = [set_short(set) for set in rcd.get_set_all()]
+    srl["sets"] = [set_short(set) for set in rcd.get_set_all()]
     return srl
 
 def record_short(rcd):
     srl = {
-        "record": {
-            "id": rcd.res_id,
-            "owner": user_short(User.query.get(rcd.owner)),
-            "title": rcd.title,
-            "text": rcd.text,
-            "time": dt_to_ms(rcd.timestamp),
-            "count": rcd.get_set_count()
-        }
+        "id": rcd.res_id,
+        "owner": user_short(User.query.get(rcd.owner)),
+        "title": rcd.title,
+        "text": rcd.text,
+        "time": dt_to_ms(rcd.timestamp),
+        "count": rcd.get_set_count()
     }
     return srl
 
@@ -61,22 +57,20 @@ def record_sets(rcd):
 
 def set(set):
     srl = set_short(set)
-    srl["set"]["unit"] = set.unit
-    srl["set"]["unit_short"] = set.unit_short
-    srl["set"]["data"] = data_short_for_type(set)
+    srl["unit"] = set.unit
+    srl["unit_short"] = set.unit_short
+    srl["data"] = data_short_for_type(set)
     return srl
 
 
 def set_short(set):
     srl = {
-        "set": {
-            "id": set.res_id,
-            "title": set.title,
-            "text": set.text,
-            "time": dt_to_ms(set.timestamp),
-            "type": DATA_TYPE_STR[set.type],
-            "count": set.get_data_count()
-        }
+        "id": set.res_id,
+        "title": set.title,
+        "text": set.text,
+        "time": dt_to_ms(set.timestamp),
+        "type": DATA_TYPE_STR[set.type],
+        "count": set.get_data_count()
     }
 
     return srl

@@ -71,9 +71,9 @@ angular.module('user').factory('userService', ['$state', 'path', 'api',
         });
     };
 
-    user.init = function(obj) {
-      if (obj) {
-        set_id(obj.user.id);
+    user.init = function(user) {
+      if (user) {
+        set_id(user.id);
       }
     };
 

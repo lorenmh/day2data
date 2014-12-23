@@ -70,7 +70,7 @@ angular.module('app').constant('path',
       ],
       user: [
         { name: "Dashboard",    route: "root.dash" },
-        { name: "My Charts",    route: "root.chart" },
+        { name: "My Sets",      route: "root.set" },
         { name: "My Records",   route: "root.record" },
         { name: "Settings",     route: "root.settings" }
       ]
@@ -135,9 +135,9 @@ angular.module('app').config(
         templateUrl: path.join_root('user/partial/settings/settings.html'),
         data: { auth: 'User' }
       })
-      .state('root.chart', {
-        url: '/charts',
-        templateUrl: path.join_root('chart/partial/chart/list/list.html'),
+      .state('root.set', {
+        url: '/sets',
+        templateUrl: path.join_root('chart/partial/set/list/list.html'),
         data: { auth: 'User' }
       })
       .state('root.record', {

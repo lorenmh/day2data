@@ -39,6 +39,7 @@ def login():
                 set_failed_login(address)
                 return api_error_message("username password combination incorrect"), 400
         else:
+            set_failed_login(address)
             return api_error_message("username password combination incorrect"), 400
     else:
         return api_error_message("maximum number of login attempts exceeded, please try again later"), 400
@@ -66,26 +67,54 @@ def api_user(user):
 
 # get: return all record
 # post: create new record
-@app.route('/api/u/<user_id>/r/')
+@app.route('/api/u/<user_id>/r/', methods=['GET', 'POST'])
 @get_user_or_404
 def api_record_index(user):
-    return json.dumps(serializers.user_records(user))
+    if request.method == 'GET':
+        return json.dumps(serializers.user_records(user))
+    else:
+        values = request.get_json(force=True)
+        validation = Record.validate(values)
+        if validation == True:
+            title, text, permissions_view = values.get('title'), values.get('text'), values.get('permissions_view')
+            rcrd = Record(title=title, owner=user.id, text=text, permissions_view=permissions_view)
+            rcrd.create()
+            return json.dumps({ 'success': True, 'record': serializers.record(rcrd) })
+        else:
+            return json.dumps({ 'errors': validation })
 
 # get: return record
 # put / post: update record
-@app.route('/api/u/<user_id>/r/<record_id>/')
+@app.route('/api/u/<user_id>/r/<record_id>/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_record_or_404
 def api_record(user, record):
-    return json.dumps(serializers.record(record))
+    if request.method == 'GET':
+        return json.dumps(serializers.record(record))
+    else: 
+        #TODO: add editing stuff
+        return 'blah'
+
 
 # get: return all sets
 # post: create new set
-@app.route('/api/u/<user_id>/r/<record_id>/s/')
+@app.route('/api/u/<user_id>/r/<record_id>/s/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_record_or_404
 def api_set_index(user, record):
-    return json.dumps(serializers.record_sets(record))
+    if request.method == 'GET':
+        return json.dumps(serializers.record_sets(record))
+    else:
+        values = request.get_json(force=True)
+        validation = Set.validate(values)
+        if validation == True:
+            title, text, type, unit, unit_short = values.get('title'), values.get('text'), int(values.get('type')), values.get('unit'), values.get('unit_short')
+            set = Set(title=title, record=record.id, type=type, text=text, unit=unit, unit_short=unit_short)
+            set.create()
+            return json.dumps({ 'success': True, 'set': serializers.set(set) })
+        else:
+            return json.dumps({ 'errors': validation })
+
 
 # get: return set
 # put / post: update set

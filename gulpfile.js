@@ -51,8 +51,8 @@ var app_paths = {
   "userService":    "user/service/userService.js",
   "chart":          "chart/chart.js",
   "dataService":    "chart/service/dataService.js",
-  "chart-list":     "chart/partial/chart/list/list.js",
-  "chart-detail":   "chart/partial/chart/detail/detail.js",
+  "set-list":       "chart/partial/set/list/list.js",
+  "set-detail":     "chart/partial/set/detail/detail.js",
   "record-list":    "chart/partial/record/list/list.js",
   "record-detail":  "chart/partial/record/detail/detail.js",
 };
@@ -77,8 +77,8 @@ var app_ang = [
   "sidebar",
   "userService",
   "dataService",
-  "chart-list",
-  "chart-detail",
+  "set-list",
+  "set-detail",
   "record-list",
   "record-detail"
 ];
