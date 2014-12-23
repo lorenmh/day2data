@@ -3,7 +3,7 @@ from app import app, db
 from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
     get_data_or_404)
 import serializers, json, os
-from models import User, Record, Set
+from models import User, Record, Set, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
 
@@ -108,10 +108,8 @@ def api_set_index(user, record):
         values = request.get_json(force=True)
         validation = Set.validate(values)
         if validation == True:
-            title, text, type, unit, unit_short = values.get('title'), values.get('text'), int(values.get('type')), values.get('unit'), values.get('unit_short')
-            set = Set(title=title, record=record.id, type=type, text=text, unit=unit, unit_short=unit_short)
-            set.create()
-            return json.dumps({ 'success': True, 'set': serializers.set(set) })
+            data_set = Set.from_values(record=record, values=values)
+            return json.dumps({ 'success': True, 'set': serializers.set(data_set) })
         else:
             return json.dumps({ 'errors': validation })
 
@@ -127,12 +125,22 @@ def api_set(user, record, set):
 
 # get: return all data
 # post: create new data
-@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/d/')
+@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/d/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_record_or_404
 @get_set_or_404
 def api_data_index(user, record, set):
-    return json.dumps(serializers.set_data(set))
+    if request.method == 'GET':
+        return json.dumps(serializers.set_data(set))
+    else:
+        values = request.get_json(force=True)
+        DataClass = DATA_TYPE_CLASS[set.data_type]
+        validation = DataClass.validate(set=set, values=values)
+        if validation == True:
+            data = DataClass.from_values(set=set, values=values)
+            return json.dumps({ 'success': True, 'data': serializers.data(set, data) })
+        else:
+            return json.dumps({ 'errors': validation })
 
 # get: return data
 # put / post: update data

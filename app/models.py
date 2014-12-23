@@ -6,7 +6,7 @@ import os, binascii, bcrypt, re
 VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
 VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{3,16}$"
 VALID_UNIT_SHORT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{,12}$"
-# 1 - 32 chars, valid a-b-c, not -a-b or a-b- a--b
+# 1 - 32 chars, valid a-b-c, not -a-b or a-b- or a--b
 # matches if false
 VALID_TITLE_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{1,32}$"
 
@@ -33,6 +33,17 @@ PERMISSIONS_VIEW_STR = {
     1: "private",
     2: "public"
 }
+
+def dt_to_seconds(dt):
+    epoch = datetime.utcfromtimestamp(0)
+    delta = dt - epoch
+    return delta.total_seconds()
+
+def dt_to_ut(dt):
+    return int(dt_to_seconds(dt) * 1000)
+
+def ut_to_dt(ut):
+    return datetime.fromtimestamp(ut / 1000)
 
 class User(db.Model):
     __tablename__ = "user"
@@ -62,7 +73,7 @@ class User(db.Model):
         self.about = about
 
     def __repr__(self):
-        return "<User id:%d>" % self.id
+        return "<User id:%s>" % self.id
 
     @staticmethod
     def with_username(username):
@@ -108,6 +119,12 @@ class CountData(db.Model):
         self.save()
 
     @staticmethod
+    def from_values(set, values):
+        d = CountData(set=set.id, text=values.get('text'))
+        d.create()
+        return d
+
+    @staticmethod
     def validate(set=None, values=None):
         return True
 
@@ -117,7 +134,7 @@ class CountData(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<CountData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+        return "<CountData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
             self.res_id)
 
 class ValueData(db.Model):
@@ -141,6 +158,12 @@ class ValueData(db.Model):
         self.save()
 
     @staticmethod
+    def from_values(set, values):
+        d = ValueData(set=set.id, value=float(values.get('value')), text=values.get('text'))
+        d.create()
+        return d
+
+    @staticmethod
     def validate(set=None, values=None):
         errors = {}
         if isinstance(values, dict):
@@ -150,7 +173,7 @@ class ValueData(db.Model):
             else:
                 try:
                     float(value)
-                except:
+                except ValueError:
                     errors['value'] = 'Invalid value'
         else:
             errors['value'] = 'Value is required'
@@ -166,7 +189,7 @@ class ValueData(db.Model):
         self.value = value
 
     def __repr__(self):
-        return "<ValueData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+        return "<ValueData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
             self.res_id)
 
 class TimedData(db.Model):
@@ -189,6 +212,12 @@ class TimedData(db.Model):
         self.save()
 
     @staticmethod
+    def from_values(set, values):
+        d = TimedData(set=set.id, start=ut_to_dt(int(values.get('start'))), stop=ut_to_dt(int(values.get('stop'))), text=values.get('text') )
+        d.create()
+        return d
+
+    @staticmethod
     def validate(set=None, values=None):
         errors = {}
         if isinstance(values, dict):
@@ -201,12 +230,12 @@ class TimedData(db.Model):
                 exception = False
                 try:
                     int(start)
-                except:
+                except ValueError:
                     exception = True
                     errors['start'] = 'Invalid start'
                 try:
                     int(stop)
-                except:
+                except ValueError:
                     exception = True
                     errors['stop'] = 'Invalid stop'
                 if not exception:
@@ -227,7 +256,7 @@ class TimedData(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<TimedData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+        return "<TimedData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
             self.res_id)
 
 
@@ -249,8 +278,18 @@ class Choice(db.Model):
         return Choice.query.filter_by(set=set).all()
 
     @staticmethod
+    def keys_for_set(set):
+        choices = Choice.for_set(set)
+        if choices != None:
+            return [ (choice.res_id, choice.title) for choice in choices ]
+        return []
+
+    @staticmethod
     def list_for_set(set):
-        return [ choice.res_id for choice in Choice.for_set(set) ]
+        choices = Choice.for_set(set)
+        if choices != None:
+            return [ choice.res_id for choice in choices ]
+        return []
 
     @staticmethod
     def get(id):
@@ -269,7 +308,7 @@ class Choice(db.Model):
         self.title = title
 
     def __repr__(self):
-        return "<Choice id:%d set.id:%d res_id:%d title:%s>" % (self.id,
+        return "<Choice id:%s set.id:%s res_id:%s title:%s>" % (self.id,
             self.set, self.res_id, self.title)
 
 
@@ -295,18 +334,24 @@ class ChoiceData(db.Model):
         self.save()
 
     @staticmethod
+    def from_values(set, values):
+        d = ChoiceData(set=set.id, choice=int(values.get('choice')), text=values.get('text'))
+        d.create()
+        return d
+
+    @staticmethod
     def validate(set=None, values=None):
         errors = {}
         if isinstance(values, dict):
-            choice, text = values.get('choice')
+            choice = values.get('choice')
             if choice == None:
                 errors['choice'] = 'Choice is required'
             else:
                 try:
                     choice = int(choice)
-                    if choice not in Choice.list_for_set(set):
+                    if choice not in Choice.list_for_set(set.id):
                         errors['choice'] = 'Invalid choice'
-                except:
+                except ValueError:
                     errors['choice'] = 'Invalid choice'
         else:
             errors['choice'] = 'Choice is required'
@@ -322,7 +367,7 @@ class ChoiceData(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<ChoiceData id:%d set.id:%d res_id:%d>" % (self.id, self.set,
+        return "<ChoiceData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
             self.res_id)
 
 DATA_TYPE_CLASS = {
@@ -339,14 +384,14 @@ def next_res_id_for_set(record):
         return last.res_id + 1
     return 1
 
-def data_model_from_type(type):
-    if type == DATA_TYPE_INT["count"]:
+def data_model_from_data_type(data_type):
+    if data_type == DATA_TYPE_INT["count"]:
         return CountData
-    elif type == DATA_TYPE_INT["value"]:
+    elif data_type == DATA_TYPE_INT["value"]:
         return ValueData
-    elif type == DATA_TYPE_INT["timed"]:
+    elif data_type == DATA_TYPE_INT["timed"]:
         return TimedData
-    elif type == DATA_TYPE_INT["choice"]:
+    elif data_type == DATA_TYPE_INT["choice"]:
         return ChoiceData
     return None
 
@@ -354,7 +399,7 @@ class Set(db.Model):
     __tablename__ = "set"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    type = db.Column(db.Integer)
+    data_type = db.Column(db.Integer)
     record = db.Column(db.Integer, db.ForeignKey('record.id'))
 
     unit_short = db.Column(db.String(12))
@@ -365,8 +410,8 @@ class Set(db.Model):
     title = db.Column(db.Text)
     text = db.Column(db.Text, nullable=True)
 
-    def type_str(self):
-        return DATA_TYPE_INT_STR[self.type]
+    def data_type_str(self):
+        return DATA_TYPE_INT_STR[self.data_type]
 
     def save(self):
         db.session.add(self)
@@ -377,35 +422,62 @@ class Set(db.Model):
         self.save()
 
     def get_data_with_res_id(self, res_id):
-        mdl = data_model_from_type(self.type)
+        mdl = data_model_from_data_type(self.data_type)
         return mdl.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
 
     def get_data_all(self):
-        mdl = data_model_from_type(self.type)
+        mdl = data_model_from_data_type(self.data_type)
         return mdl.query.filter_by(set=self.id).all()
 
     def get_data_count(self):
-        mdl = data_model_from_type(self.type)
+        mdl = data_model_from_data_type(self.data_type)
         return mdl.query.filter_by(set=self.id).count()
+
+    @staticmethod
+    def from_values(record, values):
+        title, text, data_type, unit, unit_short, choice_keys = values.get('title'), values.get('text'), int(values.get('data_type')), values.get('unit'), values.get('unit_short'), values.get('choice_keys')
+        s = Set(record=record.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
+        s.create()
+        if data_type == DATA_TYPE_INT['choice']:
+            for key in choice_keys:
+                Choice(set=s.id, title=key).create()
+        return s
+
 
     @staticmethod
     def validate(values=None):
         errors = {}
         if isinstance(values, dict):
-            title, type, unit, unit_short = values.get('title'), values.get('type'), values.get('unit'), values.get('unit_short')
+            title, data_type, unit, unit_short = values.get('title'), values.get('data_type'), values.get('unit'), values.get('unit_short')
             if title == None:
                 errors['title'] = 'Title is required'
             elif re.search(VALID_TITLE_RE, title) == None:
                 errors['title'] = 'Invalid title'
-            if type == None:
-                 errors['type'] = 'Type is required'
+            if data_type == None:
+                 errors['data_type'] = 'Data type is required'
             else:
                 try:
-                    type = int(type)
-                    if type not in DATA_TYPE_STR:
-                        errors['type'] = 'Invalid type'
-                except:
-                    errors['type'] = 'Invalid type'
+                    data_type = int(data_type)
+                    if data_type not in DATA_TYPE_STR:
+                        errors['data_type'] = 'Invalid data type'
+                    if data_type == DATA_TYPE_INT['choice']:
+                        choice_keys = values.get('choice_keys')
+                        if choice_keys == None:
+                            errors['choice_keys'] = 'Choice set requires choice keys'
+                        else:
+                            if isinstance(choice_keys, list):
+                                choice_errors = False
+                                for key in choice_keys:
+                                    try:
+                                        str(key)
+                                    except ValueError:
+                                        choice_errors = True
+                                if choice_errors:
+                                    errors['choice_keys'] = 'One or more choices is invalid'
+                            else:
+                                errors['choice_keys'] = 'Choice keys must be in an array'
+                except ValueError:
+                    errors['data_type'] = 'Invalid data type'
             if unit != None:
                 if re.search(VALID_TITLE_RE, unit) == None:
                     errors['unit'] = 'Invalid unit'
@@ -414,16 +486,16 @@ class Set(db.Model):
                     errors['unit_short'] = 'Invalid unit abbreviation'
         else:
             errors['title'] = 'Title is required'
-            errors['type'] = 'Type is required'
+            errors['data_type'] = 'Data type is required'
         if errors == {}:
             return True
         else:
             return errors
 
-    def __init__(self, record, type, title, timestamp=None,
+    def __init__(self, record, data_type, title, timestamp=None,
             text=None, unit=None, unit_short=None):
         self.record = record
-        self.type = type
+        self.data_type = data_type
         self.title = title
         self.timestamp = timestamp
         self.text = text
@@ -431,8 +503,8 @@ class Set(db.Model):
         self.unit_short = unit_short
 
     def __repr__(self):
-        return "<Set id:%d record.id:%d res_id:%d type:%s>" % (self.id, 
-            self.record, self.res_id, DATA_TYPE_STR[self.type])
+        return "<Set id:%s record.id:%s res_id:%s data_type:%s>" % (self.id, 
+            self.record, self.res_id, DATA_TYPE_STR[self.data_type])
 
 def next_res_id_for_record(mdl, owner):
     last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
