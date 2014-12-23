@@ -40,8 +40,6 @@ def dt_to_sec(dt):
 def can_attempt_login(address):
     now = datetime.now()
     attempts = r_login.get(address)
-    print "***can attempt***" * 6
-    print attempts
     if attempts != None:
         attempts = json.loads(attempts)
         if attempts["daily"]["date"] == dt_to_key(now):
@@ -60,8 +58,6 @@ def can_attempt_login(address):
 def set_failed_login(address):
     now = datetime.now()
     attempts = r_login.get(address)
-    print "***set failed***" * 6
-    print attempts
     if attempts == None:
         attempts = {
             "recent_attempts": [dt_to_sec(now)],

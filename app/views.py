@@ -1,11 +1,12 @@
 from flask import render_template, send_from_directory, request, session
 from app import app, db
 from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
-    get_data_or_404)
+    get_data_or_404, get_post_data)
 import serializers, json, os
 from models import User, Record, Set, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
+from api_response import response_success_200, response_error_400
 
 #r_key = redis.StrictRedis(host='localhost', port=6379, db=1)
 
@@ -23,12 +24,6 @@ def all(path):
 @app.route('/static/<path:path>')
 def static_file(path):
     return app.send_static_file(os.path.join('static', path))
-
-def response_error_400(msg):
-    return json.dumps({'error':True, 'message': msg}), 400
-
-def response_success_200(msg):
-    return json.dumps({'success': True, 'message': msg}), 200
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -66,8 +61,8 @@ def init():
 # get: return user details
 # put / post: update user details
 @app.route('/api/u/', methods=['POST'])
-def api_user_new():
-    values = request.get_json(force=True)
+@get_post_data
+def api_user_new(values=None):
     validation = User.validate(values)
     if validation == True:
         user = User.from_values(values)
@@ -97,11 +92,11 @@ def api_user(user):
 # post: create new record
 @app.route('/api/u/<user_id>/r/', methods=['GET', 'POST'])
 @get_user_or_404
-def api_record_index(user):
+@get_post_data
+def api_record_index(user, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.user_records(user))
     else:
-        values = request.get_json(force=True)
         validation = Record.validate(values)
         if validation == True:
             r = Record.from_values(values)
@@ -114,7 +109,8 @@ def api_record_index(user):
 @app.route('/api/u/<user_id>/r/<record_id>/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_record_or_404
-def api_record(user, record):
+@get_post_data
+def api_record(user, record, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.record(record))
     else: 
@@ -127,11 +123,11 @@ def api_record(user, record):
 @app.route('/api/u/<user_id>/r/<record_id>/s/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_record_or_404
-def api_set_index(user, record):
+@get_post_data
+def api_set_index(user, record, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.record_sets(record))
     else:
-        values = request.get_json(force=True)
         validation = Set.validate(values)
         if validation == True:
             data_set = Set.from_values(record=record, values=values)
@@ -146,7 +142,8 @@ def api_set_index(user, record):
 @get_user_or_404
 @get_record_or_404
 @get_set_or_404
-def api_set(user, record, set):
+@get_post_data
+def api_set(user, record, set, values=None):
     return json.dumps(serializers.set(set))
 
 # get: return all data
@@ -155,11 +152,11 @@ def api_set(user, record, set):
 @get_user_or_404
 @get_record_or_404
 @get_set_or_404
-def api_data_index(user, record, set):
+@get_post_data
+def api_data_index(user, record, set, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.set_data(set))
     else:
-        values = request.get_json(force=True)
         DataClass = DATA_TYPE_CLASS[set.data_type]
         validation = DataClass.validate(set=set, values=values)
         if validation == True:
@@ -175,5 +172,6 @@ def api_data_index(user, record, set):
 @get_record_or_404
 @get_set_or_404
 @get_data_or_404
-def api_data(user, record, set, data):
+@get_post_data
+def api_data(user, record, set, data, values=None):
     return json.dumps(serializers.data(set, data))

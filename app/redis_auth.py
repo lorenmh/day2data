@@ -1,20 +1,38 @@
-import redis, time, json
+import redis, time, json, hashlib, binascii, os
+
+# fuck you python
+secret = 'super duper fucking secret'
+
 from datetime import datetime
 
-r_login = redis.StrictRedis(host='localhost', port=6379, db=0)
+r_auth = redis.StrictRedis(host='localhost', port=6379, db=1)
 
-TOKEN_TIMEOUT = 's' #seconds
-MAX_DAILY_ATTEMPTS = 20
-MAX_RECENT_ATTEMPTS = 8
+def dt_to_seconds(dt):
+    epoch = datetime.utcfromtimestamp(0)
+    delta = dt - epoch
+    return delta.total_seconds()
 
-def dt_to_key(dt):
-    return "%s:%s:%s" % (dt.month, dt.day, dt.year)
+def dt_to_ut(dt):
+    return int(dt_to_seconds(dt) * 1000)
 
-def dt_to_sec(dt):
-    return time.mktime(dt.timetuple())
+def create_salt(length):
+    return binascii.b2a_hex(os.urandom(int(length / 2)))
 
-def touch_auth_token():
-  pass
+def touch_auth_token(token=None):
+    if token != None:
+        r_auth.delete(token)
 
-def auth_token_valid():
-  pass
+    now_ut = dt_to_ut(datetime.utcnow())
+    salt = create_salt(6)
+    token = hashlib.md5(secret + str(now_ut) + salt).hexdigest()
+
+    r_auth.set(token, json.dumps(now_ut))
+
+    return token
+
+def auth_token_valid(token):
+    if token != None:
+        auth = r_auth.get(token)
+        if auth != None:
+            return True
+    return False

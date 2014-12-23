@@ -2,6 +2,7 @@ angular.module('app').factory('api', [
           '$http', 'path', 
   function($http, path) {
     var api = {};
+    var token = null;
 
     api.get = function(uri) {
       return $http.get(uri);

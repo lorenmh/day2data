@@ -1,9 +1,27 @@
 import json
 from functools import wraps
+from flask import request, session
 from .models import User, Record, Set
+from api_response import response_success_200, response_error_400
+from .redis_auth import auth_token_valid
 
 def api_error_message(text):
     return json.dumps({'error': text})
+
+def get_post_data(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if request.method == 'POST':
+            values = request.get_json(force=True)
+            if 'token' in values:
+                token = values.pop('token')
+                if auth_token_valid(values.get('token')):
+                    kwargs['values'] = values
+                    return fn(*args, **kwargs)
+            return response_error_400({'token': 'Invalid token'})
+        return fn(*args, **kwargs)
+    return wrapper
+
 
 def get_user_or_404(fn):
     @wraps(fn)

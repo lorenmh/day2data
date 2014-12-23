@@ -5,6 +5,10 @@ angular.module('user').controller('FormUserNewCtrl', [
     $scope.login_errors = userService.login_errors;
     $scope.show_form = false;
 
+    $scope.submit = function() {
+
+    };
+
     userService.observe_logged_in(function(logged_in) {
       $scope.logged_in = logged_in;
     });
