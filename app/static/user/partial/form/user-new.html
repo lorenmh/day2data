@@ -1,0 +1,12 @@
+<div ng-controller="FormUserNewCtrl">
+  <h1>FORM USER NEW</h1>
+  <div class="login-status" ng-if="!logged_in">
+    <div class="logged-out text">not logged in</div>
+    <button ng-click="toggle_form_user_new()" class="login btn btn-{{ !show_form ? 'primary' : 'warning' }}">{{ show_form ? 'hide' : 'Sign Up'}}</button>
+
+    <form ng-if="show_form" ng-submit="submit()" ng-class="{errors: login_errors}">
+        <h1>Form goes here</h1>
+    </form>
+
+  </div>
+</div>

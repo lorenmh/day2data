@@ -55,6 +55,7 @@ var app_paths = {
   "set-detail":     "chart/partial/set/detail/detail.js",
   "record-list":    "chart/partial/record/list/list.js",
   "record-detail":  "chart/partial/record/detail/detail.js",
+  "form-user-new":  "user/partial/form/user-new.js"
 };
 
 // app_root = barebones stuff
@@ -80,7 +81,8 @@ var app_ang = [
   "set-list",
   "set-detail",
   "record-list",
-  "record-detail"
+  "record-detail",
+  "form-user-new"
 ];
 
 var app_lib = [
