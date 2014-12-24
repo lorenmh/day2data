@@ -19,6 +19,7 @@ angular.module('user').controller('UserPanelCtrl', [
     };
 
     $scope.submit = function() {
+      console.log(this);
       var user = document.getElementById('username-input');
       var password = document.getElementById('password-input');
       userService.login(user.value, password.value);

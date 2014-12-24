@@ -16,6 +16,11 @@ def xsrf_cookie_response(template):
     res.set_cookie('XSRF-TOKEN', token)
     return res
 
+#returns the app template if the route doesnt start with api or static
+@app.route('/<regex("(?!(?:^api|^static)).*"):path>')
+def all(path):
+    return xsrf_cookie_response('index.html')
+
 @app.route('/')
 def root():
     return xsrf_cookie_response('index.html')
@@ -23,11 +28,6 @@ def root():
 @app.route('/static/<path:path>')
 def static_file(path):
     return app.send_static_file(os.path.join('static', path))
-
-#returns the app template if the route doesnt start with api or static
-@app.route('/<regex("^(?!(?:api|static).*).*$"):path>')
-def all(path):
-    return xsrf_cookie_response('index.html')
 
 @app.route('/api/login', methods=['POST'])
 @get_post_data
