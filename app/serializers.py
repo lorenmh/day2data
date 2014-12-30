@@ -31,7 +31,7 @@ def user_records(usr):
 
 def record(rcd):
     srl = record_short(rcd)
-    srl["sets"] = [set_short(set) for set in rcd.get_set_all()]
+    srl["datasets"] = [dataset_short(dataset) for dataset in rcd.get_dataset_all()]
     return srl
 
 def record_short(rcd):
@@ -41,48 +41,48 @@ def record_short(rcd):
         "title": rcd.title,
         "text": rcd.text,
         "time": dt_to_ms(rcd.timestamp),
-        "count": rcd.get_set_count()
+        "count": rcd.get_dataset_count()
     }
     return srl
 
-def record_sets(rcd):
-    return [set_short(s) for s in rcd.get_set_all()]
+def record_datasets(rcd):
+    return [dataset_short(s) for s in rcd.get_dataset_all()]
 
 
-def set(set):
-    srl = set_short(set)
-    srl["unit"] = set.unit
-    srl["unit_short"] = set.unit_short
-    srl["data_set"] = data_short_for_data_type(set)
+def dataset(dataset):
+    srl = dataset_short(dataset)
+    srl["unit"] = dataset.unit
+    srl["unit_short"] = dataset.unit_short
+    srl["dataset"] = data_short_for_data_type(dataset)
     return srl
 
 
-def set_short(set):
+def dataset_short(dataset):
     srl = {
-        "id": set.res_id,
-        "title": set.title,
-        "text": set.text,
-        "time": dt_to_ms(set.timestamp),
-        "data_type": DATA_TYPE_STR[set.data_type],
-        "count": set.get_data_count()
+        "id": dataset.res_id,
+        "title": dataset.title,
+        "text": dataset.text,
+        "time": dt_to_ms(dataset.timestamp),
+        "data_type": DATA_TYPE_STR[dataset.data_type],
+        "count": dataset.get_data_count()
     }
 
     return srl
 
-def set_data(set):
-    return data_short_for_data_type(set)
+def dataset_data(dataset):
+    return data_short_for_data_type(dataset)
 
-def data(set, data):
-    if set.data_type == DATA_TYPE_INT["count"]:
+def data(dataset, data):
+    if dataset.data_type == DATA_TYPE_INT["count"]:
         type = "count"
         data_info = count_data_short(data)
-    elif set.data_type == DATA_TYPE_INT["value"]:
+    elif dataset.data_type == DATA_TYPE_INT["value"]:
         type = "value"
         data_info = value_data_short(data)
-    elif set.data_type == DATA_TYPE_INT["timed"]:
+    elif dataset.data_type == DATA_TYPE_INT["timed"]:
         type = "timed"
         data_info = timed_data_short(data)
-    elif set.data_type == DATA_TYPE_INT["choice"]:
+    elif dataset.data_type == DATA_TYPE_INT["choice"]:
         type = "choice"
         data_info = choice_data_short(data)
     else:
@@ -126,28 +126,28 @@ def choice_data_short(data):
     }
     return srl
 
-def choice_set_key(set):
-    choices = Choice.for_set(set.id)
+def choice_dataset_key(dataset):
+    choices = Choice.for_dataset(dataset.id)
     key = {}
     for choice in choices:
         key[choice.res_id] = choice.title
     return key
 
-def data_short_for_data_type(set):
+def data_short_for_data_type(dataset):
     key = None
-    if set.data_type == DATA_TYPE_INT["count"]:
+    if dataset.data_type == DATA_TYPE_INT["count"]:
         data_type = "count"
-        data_list = [count_data_short(d) for d in set.get_data_all()]
-    elif set.data_type == DATA_TYPE_INT["value"]:
+        data_list = [count_data_short(d) for d in dataset.get_data_all()]
+    elif dataset.data_type == DATA_TYPE_INT["value"]:
         data_type = "value"
-        data_list = [value_data_short(d) for d in set.get_data_all()]
-    elif set.data_type == DATA_TYPE_INT["timed"]:
+        data_list = [value_data_short(d) for d in dataset.get_data_all()]
+    elif dataset.data_type == DATA_TYPE_INT["timed"]:
         data_type = "timed"
-        data_list = [timed_data_short(d) for d in set.get_data_all()]
-    elif set.data_type == DATA_TYPE_INT["choice"]:
+        data_list = [timed_data_short(d) for d in dataset.get_data_all()]
+    elif dataset.data_type == DATA_TYPE_INT["choice"]:
         data_type = "choice"
-        key = choice_set_key(set)
-        data_list = [choice_data_short(d) for d in set.get_data_all()]
+        key = choice_dataset_key(dataset)
+        data_list = [choice_data_short(d) for d in dataset.get_data_all()]
     else:
         data_type = None
         data_list = None

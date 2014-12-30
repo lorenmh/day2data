@@ -3,7 +3,7 @@ from app import app, db
 from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
     get_data_or_404, get_post_data)
 import serializers, json, os
-from models import User, Record, Set, DATA_TYPE_CLASS
+from models import User, Record, DataSet, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
 from api_response import response_success, response_error
@@ -82,7 +82,7 @@ def api_user_new(values=None):
 @get_user_or_404
 def api_user(user):
     if request.method == 'GET':
-        return response_success(serializers.user(user))
+        return json.dumps(serializers.user(user))
     else:
         values = request.get_json(force=True)
         validation = User.validate(values)
@@ -100,7 +100,7 @@ def api_user(user):
 @get_post_data
 def api_record_index(user, values=None):
     if request.method == 'GET':
-        return response_success(serializers.user_records(user))
+        return json.dumps(serializers.user_records(user))
     else:
         validation = Record.validate(values)
         if validation == True:
@@ -117,7 +117,7 @@ def api_record_index(user, values=None):
 @get_post_data
 def api_record(user, record, values=None):
     if request.method == 'GET':
-        return response_success(serializers.record(record))
+        return json.dumps(serializers.record(record))
     else: 
         #TODO: add editing stuff
         return 'blah'
@@ -133,9 +133,9 @@ def api_set_index(user, record, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.record_sets(record))
     else:
-        validation = Set.validate(values)
+        validation = DataSet.validate(values)
         if validation == True:
-            data_set = Set.from_values(record=record, values=values)
+            data_set = DataSet.from_values(record=record, values=values)
             return response_success(serializers.set(data_set))
         else:
             return response_error(validation)

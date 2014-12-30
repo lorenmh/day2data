@@ -11,7 +11,7 @@ usr.create()
 rcrd = Record(1, 'First Record')
 rcrd.create()
 
-cset = Set(1, 1, 'First Count Set')
+cset = DataSet(1, 1, 'First Count Set')
 cset.create()
 '''
 vset = Set(1, 2, 'First Value Set')
@@ -55,7 +55,7 @@ for i in range(10):
     ch_data.create()
 '''
 # the lazy haha
-for i in range(100):
+for i in range(4):
     rand = randrange(0,6)
     print "sleep %d" % rand
     sleep(rand)

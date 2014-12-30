@@ -1,7 +1,7 @@
 import json
 from functools import wraps
 from flask import request, session
-from .models import User, Record, Set
+from .models import User, Record, DataSet
 from api_response import response_success, response_error
 from .redis_auth import auth_token_valid
 

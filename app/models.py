@@ -32,7 +32,8 @@ PERMISSIONS_VIEW_INT = {
 
 PERMISSIONS_VIEW_STR = {
     1: "private",
-    2: "public"
+    2: "friends",
+    3: "public"
 }
 
 def dt_to_seconds(dt):
@@ -63,10 +64,10 @@ class User(db.Model):
         self.save()
 
     def get_record_with_res_id(self, res_id):
-        return Record.query.filter_by(owner=self.id).filter_by(res_id=res_id).first()
+        return Record.query.filter_by(user=self.id).filter_by(res_id=res_id).first()
 
     def get_record_all(self):
-        return Record.query.filter_by(owner=self.id).all()
+        return Record.query.filter_by(user=self.id).all()
 
     @staticmethod
     def from_values(values):
@@ -137,9 +138,9 @@ class User(db.Model):
     def matches_password(self, str):
         return bcrypt.hashpw(str.encode('utf-8'), self.password.encode('utf-8')) == self.password
 
-# finds the current max res_id for this set
-def next_res_id_for_data(mdl, set):
-    last = db.session.query(mdl).filter_by(set=set).order_by("-id").first()
+# finds the current max res_id for this dataset
+def next_res_id_for_data(mdl, dataset):
+    last = db.session.query(mdl).filter_by(dataset=dataset).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -148,7 +149,7 @@ class CountData(db.Model):
     __tablename__ = "countdata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+    dataset = db.Column(db.Integer, db.ForeignKey('dataset.id'))
 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -159,33 +160,33 @@ class CountData(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_data(CountData, self.set)
+        self.res_id = next_res_id_for_data(CountData, self.dataset)
         self.save()
 
     @staticmethod
-    def from_values(set, values):
-        d = CountData(set=set.id, text=values.get('text'))
+    def from_values(dataset, values):
+        d = CountData(dataset=dataset.id, text=values.get('text'))
         d.create()
         return d
 
     @staticmethod
-    def validate(set=None, values=None):
+    def validate(dataset=None, values=None):
         return True
 
-    def __init__(self, set, timestamp=None, text=None):
-        self.set = set
+    def __init__(self, dataset, timestamp=None, text=None):
+        self.dataset = dataset
         self.timestamp = timestamp
         self.text = text
 
     def __repr__(self):
-        return "<CountData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
+        return "<CountData id:%s dataset.id:%s res_id:%s>" % (self.id, self.dataset,
             self.res_id)
 
 class ValueData(db.Model):
     __tablename__ = "valuedata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+    dataset = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -198,17 +199,17 @@ class ValueData(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_data(ValueData, self.set)
+        self.res_id = next_res_id_for_data(ValueData, self.dataset)
         self.save()
 
     @staticmethod
-    def from_values(set, values):
-        d = ValueData(set=set.id, value=float(values.get('value')), text=values.get('text'))
+    def from_values(dataset, values):
+        d = ValueData(dataset=dataset.id, value=float(values.get('value')), text=values.get('text'))
         d.create()
         return d
 
     @staticmethod
-    def validate(set=None, values=None):
+    def validate(dataset=None, values=None):
         errors = {}
         if isinstance(values, dict):
             value = values.get('value')
@@ -226,21 +227,21 @@ class ValueData(db.Model):
         else:
             return errors
 
-    def __init__(self, set, timestamp=None, text=None, value=None):
-        self.set = set
+    def __init__(self, dataset, timestamp=None, text=None, value=None):
+        self.dataset = dataset
         self.timestamp = timestamp
         self.text = text
         self.value = value
 
     def __repr__(self):
-        return "<ValueData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
+        return "<ValueData id:%s dataset.id:%s res_id:%s>" % (self.id, self.dataset,
             self.res_id)
 
 class TimedData(db.Model):
     __tablename__ = "timeddata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+    dataset = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     
     text = db.Column(db.Text, nullable=True)
 
@@ -252,17 +253,17 @@ class TimedData(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_data(TimedData, self.set)
+        self.res_id = next_res_id_for_data(TimedData, self.dataset)
         self.save()
 
     @staticmethod
-    def from_values(set, values):
-        d = TimedData(set=set.id, start=ut_to_dt(int(values.get('start'))), stop=ut_to_dt(int(values.get('stop'))), text=values.get('text') )
+    def from_values(dataset, values):
+        d = TimedData(dataset=dataset.id, start=ut_to_dt(int(values.get('start'))), stop=ut_to_dt(int(values.get('stop'))), text=values.get('text') )
         d.create()
         return d
 
     @staticmethod
-    def validate(set=None, values=None):
+    def validate(dataset=None, values=None):
         errors = {}
         if isinstance(values, dict):
             start, stop = values.get('start'), values.get('stop')
@@ -293,19 +294,19 @@ class TimedData(db.Model):
         else:
             return errors
 
-    def __init__(self, set, text=None, start=None, stop=None):
-        self.set = set
+    def __init__(self, dataset, text=None, start=None, stop=None):
+        self.dataset = dataset
         self.start = start
         self.stop = stop
         self.text = text
 
     def __repr__(self):
-        return "<TimedData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
+        return "<TimedData id:%s dataset.id:%s res_id:%s>" % (self.id, self.dataset,
             self.res_id)
 
 
-def next_res_id_for_choice(set):
-    last = Choice.query.filter_by(set=set).order_by("-id").first()
+def next_res_id_for_choice(dataset):
+    last = Choice.query.filter_by(dataset=dataset).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -314,23 +315,23 @@ class Choice(db.Model):
     __tablename__ = "choice"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+    dataset = db.Column(db.Integer, db.ForeignKey('dataset.id'))
     title = db.Column(db.String(32))
 
     @staticmethod
-    def for_set(set):
-        return Choice.query.filter_by(set=set).all()
+    def for_dataset(dataset):
+        return Choice.query.filter_by(dataset=dataset).all()
 
     @staticmethod
-    def keys_for_set(set):
-        choices = Choice.for_set(set)
+    def keys_for_dataset(dataset):
+        choices = Choice.for_dataset(dataset)
         if choices != None:
             return [ (choice.res_id, choice.title) for choice in choices ]
         return []
 
     @staticmethod
-    def list_for_set(set):
-        choices = Choice.for_set(set)
+    def list_for_dataset(dataset):
+        choices = Choice.for_dataset(dataset)
         if choices != None:
             return [ choice.res_id for choice in choices ]
         return []
@@ -344,23 +345,23 @@ class Choice(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_choice(self.set)
+        self.res_id = next_res_id_for_choice(self.dataset)
         self.save()
 
-    def __init__(self, set, title):
-        self.set = set
+    def __init__(self, dataset, title):
+        self.dataset = dataset
         self.title = title
 
     def __repr__(self):
-        return "<Choice id:%s set.id:%s res_id:%s title:%s>" % (self.id,
-            self.set, self.res_id, self.title)
+        return "<Choice id:%s dataset.id:%s res_id:%s title:%s>" % (self.id,
+            self.dataset, self.res_id, self.title)
 
 
 class ChoiceData(db.Model):
     __tablename__ = "choicedata"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    set = db.Column(db.Integer, db.ForeignKey('set.id'))
+    dataset = db.Column(db.Integer, db.ForeignKey('dataset.id'))
 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -374,17 +375,17 @@ class ChoiceData(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_data(ChoiceData, self.set)
+        self.res_id = next_res_id_for_data(ChoiceData, self.dataset)
         self.save()
 
     @staticmethod
-    def from_values(set, values):
-        d = ChoiceData(set=set.id, choice=int(values.get('choice')), text=values.get('text'))
+    def from_values(dataset, values):
+        d = ChoiceData(dataset=dataset.id, choice=int(values.get('choice')), text=values.get('text'))
         d.create()
         return d
 
     @staticmethod
-    def validate(set=None, values=None):
+    def validate(dataset=None, values=None):
         errors = {}
         if isinstance(values, dict):
             choice = values.get('choice')
@@ -393,7 +394,7 @@ class ChoiceData(db.Model):
             else:
                 try:
                     choice = int(choice)
-                    if choice not in Choice.list_for_set(set.id):
+                    if choice not in Choice.list_for_dataset(dataset.id):
                         errors['choice'] = 'Invalid choice'
                 except ValueError:
                     errors['choice'] = 'Invalid choice'
@@ -404,14 +405,14 @@ class ChoiceData(db.Model):
         else:
             return errors
 
-    def __init__(self, set, choice, timestamp=None, text=None):
-        self.set = set
+    def __init__(self, dataset, choice, timestamp=None, text=None):
+        self.dataset = dataset
         self.choice = choice
         self.timestamp = timestamp
         self.text = text
 
     def __repr__(self):
-        return "<ChoiceData id:%s set.id:%s res_id:%s>" % (self.id, self.set,
+        return "<ChoiceData id:%s dataset.id:%s res_id:%s>" % (self.id, self.dataset,
             self.res_id)
 
 DATA_TYPE_CLASS = {
@@ -421,9 +422,9 @@ DATA_TYPE_CLASS = {
     4: ChoiceData
 }
 
-# each set should have relative resource ids (relative to record)
-def next_res_id_for_set(record):
-    last = Set.query.filter_by(record=record).order_by("-id").first()
+# each dataset should have relative resource ids (relative to record)
+def next_res_id_for_dataset(record):
+    last = DataSet.query.filter_by(record=record).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -439,8 +440,8 @@ def data_model_from_data_type(data_type):
         return ChoiceData
     return None
 
-class Set(db.Model):
-    __tablename__ = "set"
+class DataSet(db.Model):
+    __tablename__ = "dataset"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     data_type = db.Column(db.Integer)
@@ -462,29 +463,29 @@ class Set(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_set(self.record)
+        self.res_id = next_res_id_for_dataset(self.record)
         self.save()
 
     def get_data_with_res_id(self, res_id):
         mdl = data_model_from_data_type(self.data_type)
-        return mdl.query.filter_by(set=self.id).filter_by(res_id=res_id).first()
+        return mdl.query.filter_by(dataset=self.id).filter_by(res_id=res_id).first()
 
     def get_data_all(self):
         mdl = data_model_from_data_type(self.data_type)
-        return mdl.query.filter_by(set=self.id).all()
+        return mdl.query.filter_by(dataset=self.id).all()
 
     def get_data_count(self):
         mdl = data_model_from_data_type(self.data_type)
-        return mdl.query.filter_by(set=self.id).count()
+        return mdl.query.filter_by(dataset=self.id).count()
 
     @staticmethod
     def from_values(record, values):
         title, text, data_type, unit, unit_short, choice_keys = values.get('title'), values.get('text'), int(values.get('data_type')), values.get('unit'), values.get('unit_short'), values.get('choice_keys')
-        s = Set(record=record.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
+        s = DataSet(record=record.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
         s.create()
         if data_type == DATA_TYPE_INT['choice']:
             for key in choice_keys:
-                Choice(set=s.id, title=key).create()
+                Choice(dataset=s.id, title=key).create()
         return s
 
 
@@ -507,7 +508,7 @@ class Set(db.Model):
                     if data_type == DATA_TYPE_INT['choice']:
                         choice_keys = values.get('choice_keys')
                         if choice_keys == None:
-                            errors['choice_keys'] = 'Choice set requires choice keys'
+                            errors['choice_keys'] = 'Choice dataset requires choice keys'
                         else:
                             if isinstance(choice_keys, list):
                                 choice_errors = False
@@ -547,11 +548,11 @@ class Set(db.Model):
         self.unit_short = unit_short
 
     def __repr__(self):
-        return "<Set id:%s record.id:%s res_id:%s data_type:%s>" % (self.id, 
+        return "<DataSet id:%s record.id:%s res_id:%s data_type:%s>" % (self.id, 
             self.record, self.res_id, DATA_TYPE_STR[self.data_type])
 
-def next_res_id_for_record(mdl, owner):
-    last = db.session.query(mdl).filter_by(owner=owner).order_by("-id").first()
+def next_res_id_for_record(mdl, user):
+    last = db.session.query(mdl).filter_by(user=user).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -560,7 +561,7 @@ class Record(db.Model):
     __tablename__ = "record"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
-    owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
     permissions_view = db.Column(db.Integer)
 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
@@ -573,36 +574,36 @@ class Record(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_record(Record, self.owner)
+        self.res_id = next_res_id_for_record(Record, self.user)
         self.save()
 
-    def get_set_with_res_id(self, res_id):
-        return Set.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
+    def get_dataset_with_res_id(self, res_id):
+        return DataSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
 
-    def get_set_count(self):
-        return Set.query.filter_by(record=self.id).count()
+    def get_dataset_count(self):
+        return DataSet.query.filter_by(record=self.id).count()
 
-    def get_set_all(self):
-        return Set.query.filter_by(record=self.id).all()
+    def get_dataset_all(self):
+        return DataSet.query.filter_by(record=self.id).all()
 
-    def __init__(self, owner, title, permissions_view=None,
+    def __init__(self, user, title, permissions_view=None,
             timestamp=None, text=None):
         if permissions_view == None:
             permissions_view = PERMISSIONS_VIEW_INT['private']
-        self.owner = owner
+        self.user = user
         self.title = title
         self.permissions_view = permissions_view
         self.timestamp = timestamp
         self.text = text
 
     def __repr__(self):
-        return "<Record id:%s owner.id:%s res_id:%s>" % (self.id, self.owner,
+        return "<Record id:%s user.id:%s res_id:%s>" % (self.id, self.user,
             self.res_id)
 
     @staticmethod
     def from_values(user, values):
         title, text, permissions_view = values.get('title'), values.get('text'), values.get('permissions_view')
-        r = Record(title=title, owner=user.id, text=text, permissions_view=permissions_view)
+        r = Record(title=title, user=user.id, text=text, permissions_view=permissions_view)
         r.create()
         return r
 
