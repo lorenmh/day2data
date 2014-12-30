@@ -1,7 +1,7 @@
 import json
 from functools import wraps
 from flask import request, session
-from .models import User, Record, DataSet
+from .models import User, Collection, DataSet
 from api_response import response_success, response_error
 from .redis_auth import auth_token_valid
 
@@ -30,25 +30,25 @@ def get_user_or_404(fn):
             return response_error( {"user_id": "user id not found"} )
     return wrapper
 
-def get_record_or_404(fn):
+def get_collection_or_404(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         user = kwargs["user"]
-        record_id = kwargs.pop('record_id')
-        record = user.get_record_with_res_id(record_id)
-        if record != None:
-            kwargs["record"] = record
+        collection_id = kwargs.pop('collection_id')
+        collection = user.get_collection_with_res_id(collection_id)
+        if collection != None:
+            kwargs["collection"] = collection
             return fn(*args, **kwargs)
         else:
-            return response_error( {"record_id": "record id not found"} )
+            return response_error( {"collection_id": "collection id not found"} )
     return wrapper
 
-def get_set_or_404(fn):
+def get_dataset_or_404(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        record = kwargs["record"]
+        collection = kwargs["collection"]
         set_id = kwargs.pop('set_id')
-        set = record.get_set_with_res_id(set_id)
+        set = collection.get_dataset_with_res_id(set_id)
         if set != None:
             kwargs["set"] = set
             return fn(*args, **kwargs)

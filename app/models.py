@@ -7,9 +7,9 @@ VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
 VALID_EMAIL_RE = "^.+@.+\..+$"
 VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{3,16}$"
 VALID_UNIT_SHORT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{,12}$"
-# 1 - 32 chars, valid a-b-c, not -a-b or a-b- or a--b
+# 1 - 32 chars, valid a-b-c, not -a-b or a-b- or a--b. a b c matches, not a  b
 # matches if false
-VALID_TITLE_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{1,32}$"
+VALID_TITLE_RE = "^(?!.*(?:^|[_- ])(?:[_- ]|$))[\w- ]{1,32}$"
 
 DATA_TYPE_INT = {
     "count": 1,
@@ -63,11 +63,11 @@ class User(db.Model):
     def create(self):
         self.save()
 
-    def get_record_with_res_id(self, res_id):
-        return Record.query.filter_by(user=self.id).filter_by(res_id=res_id).first()
+    def get_collection_with_res_id(self, res_id):
+        return Collection.query.filter_by(user=self.id).filter_by(res_id=res_id).first()
 
-    def get_record_all(self):
-        return Record.query.filter_by(user=self.id).all()
+    def get_collection_all(self):
+        return Collection.query.filter_by(user=self.id).all()
 
     @staticmethod
     def from_values(values):
@@ -422,9 +422,9 @@ DATA_TYPE_CLASS = {
     4: ChoiceData
 }
 
-# each dataset should have relative resource ids (relative to record)
-def next_res_id_for_dataset(record):
-    last = DataSet.query.filter_by(record=record).order_by("-id").first()
+# each dataset should have relative resource ids (relative to collection)
+def next_res_id_for_dataset(collection):
+    last = DataSet.query.filter_by(collection=collection).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -445,7 +445,7 @@ class DataSet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     data_type = db.Column(db.Integer)
-    record = db.Column(db.Integer, db.ForeignKey('record.id'))
+    collection = db.Column(db.Integer, db.ForeignKey('collection.id'))
 
     unit_short = db.Column(db.String(12))
     unit = db.Column(db.String(32))
@@ -463,7 +463,7 @@ class DataSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_dataset(self.record)
+        self.res_id = next_res_id_for_dataset(self.collection)
         self.save()
 
     def get_data_with_res_id(self, res_id):
@@ -479,9 +479,9 @@ class DataSet(db.Model):
         return mdl.query.filter_by(dataset=self.id).count()
 
     @staticmethod
-    def from_values(record, values):
+    def from_values(collection, values):
         title, text, data_type, unit, unit_short, choice_keys = values.get('title'), values.get('text'), int(values.get('data_type')), values.get('unit'), values.get('unit_short'), values.get('choice_keys')
-        s = DataSet(record=record.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
+        s = DataSet(collection=collection.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
         s.create()
         if data_type == DATA_TYPE_INT['choice']:
             for key in choice_keys:
@@ -537,9 +537,9 @@ class DataSet(db.Model):
         else:
             return errors
 
-    def __init__(self, record, data_type, title, timestamp=None,
+    def __init__(self, collection, data_type, title, timestamp=None,
             text=None, unit=None, unit_short=None):
-        self.record = record
+        self.collection = collection
         self.data_type = data_type
         self.title = title
         self.timestamp = timestamp
@@ -548,17 +548,17 @@ class DataSet(db.Model):
         self.unit_short = unit_short
 
     def __repr__(self):
-        return "<DataSet id:%s record.id:%s res_id:%s data_type:%s>" % (self.id, 
-            self.record, self.res_id, DATA_TYPE_STR[self.data_type])
+        return "<DataSet id:%s collection.id:%s res_id:%s data_type:%s>" % (self.id, 
+            self.collection, self.res_id, DATA_TYPE_STR[self.data_type])
 
-def next_res_id_for_record(mdl, user):
+def next_res_id_for_collection(mdl, user):
     last = db.session.query(mdl).filter_by(user=user).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
 
-class Record(db.Model):
-    __tablename__ = "record"
+class Collection(db.Model):
+    __tablename__ = "collection"
     id = db.Column(db.Integer, primary_key=True)
     res_id = db.Column(db.Integer)
     user = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -574,17 +574,17 @@ class Record(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_record(Record, self.user)
+        self.res_id = next_res_id_for_collection(Collection, self.user)
         self.save()
 
     def get_dataset_with_res_id(self, res_id):
-        return DataSet.query.filter_by(record=self.id).filter_by(res_id=res_id).first()
+        return DataSet.query.filter_by(collection=self.id).filter_by(res_id=res_id).first()
 
     def get_dataset_count(self):
-        return DataSet.query.filter_by(record=self.id).count()
+        return DataSet.query.filter_by(collection=self.id).count()
 
     def get_dataset_all(self):
-        return DataSet.query.filter_by(record=self.id).all()
+        return DataSet.query.filter_by(collection=self.id).all()
 
     def __init__(self, user, title, permissions_view=None,
             timestamp=None, text=None):
@@ -597,13 +597,13 @@ class Record(db.Model):
         self.text = text
 
     def __repr__(self):
-        return "<Record id:%s user.id:%s res_id:%s>" % (self.id, self.user,
+        return "<Collection id:%s user.id:%s res_id:%s>" % (self.id, self.user,
             self.res_id)
 
     @staticmethod
     def from_values(user, values):
         title, text, permissions_view = values.get('title'), values.get('text'), values.get('permissions_view')
-        r = Record(title=title, user=user.id, text=text, permissions_view=permissions_view)
+        r = Collection(title=title, user=user.id, text=text, permissions_view=permissions_view)
         r.create()
         return r
 

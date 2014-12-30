@@ -1,9 +1,9 @@
 from flask import render_template, send_from_directory, request, session, Response, make_response
 from app import app, db
-from decorators import (get_user_or_404, get_record_or_404, get_set_or_404, 
+from decorators import (get_user_or_404, get_collection_or_404, get_dataset_or_404, 
     get_data_or_404, get_post_data)
 import serializers, json, os
-from models import User, Record, DataSet, DATA_TYPE_CLASS
+from models import User, Collection, DataSet, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
 from api_response import response_success, response_error
@@ -93,31 +93,31 @@ def api_user(user):
         else:
             return response_error(validation)
 
-# get: return all record
-# post: create new record
+# get: return all collection
+# post: create new collection
 @app.route('/api/u/<user_id>/r/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_post_data
-def api_record_index(user, values=None):
+def api_collection_index(user, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.user_records(user))
+        return json.dumps(serializers.user_collections(user))
     else:
-        validation = Record.validate(values)
+        validation = Collection.validate(values)
         if validation == True:
-            r = Record.from_values(user, values)
-            return response_success(serializers.record(r))
+            r = Collection.from_values(user, values)
+            return response_success(serializers.collection(r))
         else:
             return response_error(validation)
 
-# get: return record
-# put / post: update record
-@app.route('/api/u/<user_id>/r/<record_id>/', methods=['GET', 'POST'])
+# get: return collection
+# put / post: update collection
+@app.route('/api/u/<user_id>/r/<collection_id>/', methods=['GET', 'POST'])
 @get_user_or_404
-@get_record_or_404
+@get_collection_or_404
 @get_post_data
-def api_record(user, record, values=None):
+def api_collection(user, collection, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.record(record))
+        return json.dumps(serializers.collection(collection))
     else: 
         #TODO: add editing stuff
         return 'blah'
@@ -125,17 +125,17 @@ def api_record(user, record, values=None):
 
 # get: return all sets
 # post: create new set
-@app.route('/api/u/<user_id>/r/<record_id>/s/', methods=['GET', 'POST'])
+@app.route('/api/u/<user_id>/r/<collection_id>/s/', methods=['GET', 'POST'])
 @get_user_or_404
-@get_record_or_404
+@get_collection_or_404
 @get_post_data
-def api_set_index(user, record, values=None):
+def api_set_index(user, collection, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.record_sets(record))
+        return json.dumps(serializers.collection_sets(collection))
     else:
         validation = DataSet.validate(values)
         if validation == True:
-            data_set = DataSet.from_values(record=record, values=values)
+            data_set = DataSet.from_values(collection=collection, values=values)
             return response_success(serializers.set(data_set))
         else:
             return response_error(validation)
@@ -143,22 +143,22 @@ def api_set_index(user, record, values=None):
 
 # get: return set
 # put / post: update set
-@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/')
+@app.route('/api/u/<user_id>/r/<collection_id>/s/<set_id>/')
 @get_user_or_404
-@get_record_or_404
-@get_set_or_404
+@get_collection_or_404
+@get_dataset_or_404
 @get_post_data
-def api_set(user, record, set, values=None):
+def api_set(user, collection, set, values=None):
     return json.dumps(serializers.set(set))
 
 # get: return all data
 # post: create new data
-@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/d/', methods=['GET', 'POST'])
+@app.route('/api/u/<user_id>/r/<collection_id>/s/<set_id>/d/', methods=['GET', 'POST'])
 @get_user_or_404
-@get_record_or_404
-@get_set_or_404
+@get_collection_or_404
+@get_dataset_or_404
 @get_post_data
-def api_data_index(user, record, set, values=None):
+def api_data_index(user, collection, set, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.set_data(set))
     else:
@@ -172,11 +172,11 @@ def api_data_index(user, record, set, values=None):
 
 # get: return data
 # put / post: update data
-@app.route('/api/u/<user_id>/r/<record_id>/s/<set_id>/d/<data_id>/')
+@app.route('/api/u/<user_id>/r/<collection_id>/s/<set_id>/d/<data_id>/')
 @get_user_or_404
-@get_record_or_404
-@get_set_or_404
+@get_collection_or_404
+@get_dataset_or_404
 @get_data_or_404
 @get_post_data
-def api_data(user, record, set, data, values=None):
+def api_data(user, collection, set, data, values=None):
     return json.dumps(serializers.data(set, data))
