@@ -1,7 +1,7 @@
 angular.module('chart').controller( 'SetListCtrl', [
-          '$scope', 'dataService',
-  function($scope, dataService) {
-    /*var z = dataService.query({ u: 'foo', r: 1, s: 1 });
+          '$scope', 'model',
+  function($scope, model) {
+    var z = model.Record.get({ u: 'foo', r: 1 });
     $scope.test = z;
-    window.a = z;*/
+    window.a = z;
 }]);

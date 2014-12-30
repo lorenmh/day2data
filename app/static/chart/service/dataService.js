@@ -5,6 +5,6 @@ angular.module('chart').factory('dataService', [
       console.log(d);
       return 'a';
     }*/
-    //var Set = $resource('/api/u/:u/r/:r/s/:s/', { u: "@uid", r: "@rid", s: "@sid" }, {'query': {isArray: false}});
-    return Set;
+    var Record = $resource('/api/u/:u/r/:r/', { u: "@uid", r: "@rid" }, {'query': {isArray: false}});
+    return Record;
 }]);

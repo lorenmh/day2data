@@ -1,5 +1,29 @@
-<div ng-controller="HomeCtrl">
-  <h1>HOME</h1>
+<div class="col-lg-8 col-md-10 col-lg-offset-2 col-md-offset-1" ng-controller="HomeCtrl">
+  <svg id="graph" xmlns="http://www.w3.org/2000/svg"
+     x="0px" y="0px" viewBox="0 0 500 260" xml:space="preserve">
+  <g>
+    <circle class="anim anim-1" fill="#E54535" cx="51.5" cy="249.448" r="0"/>
+    <line fill="none" stroke="#E54535" stroke-width="10" stroke-linejoin="round" stroke-dasharray="12.6561,12.6561" x1="124.639" y1="171.006" x2="59.907" y2="240.431"/>
+    <line class="anim anim-2" fill="none" stroke="#FAFAFA" stroke-width="11" x1="125.639" y1="170.006" x2="60.907" y2="239.431"/>
+    <circle class="anim anim-3" fill="#E54535" cx="138.361" cy="158.361" r="0"/>
+    <line fill="none" stroke="#E54535" stroke-width="10" stroke-linejoin="round" stroke-dasharray="12.0914,12.0914" x1="215.909" y1="157.752" x2="149.407" y2="157.421"/>
+    <line class="anim anim-4" fill="none" stroke="#FAFAFA" stroke-width="11" x1="217.909" y1="157.752" x2="151.407" y2="157.421"/>
+    <circle class="anim anim-5" fill="#E54535" cx="233" cy="156.842" r="0"/>
+    <line fill="none" stroke="#E54535" stroke-width="10" stroke-linejoin="round" stroke-dasharray="10.2013,10.2013" x1="278.745" y1="107.695" x2="241.391" y2="149.559"/>
+    <line class="anim anim-6" fill="none" stroke="#FAFAFA" stroke-width="11" x1="279.745" y1="106.695" x2="242.391" y2="148.559"/>
+    <circle class="anim anim-7" fill="#E54535" cx="291.532" cy="96.606" r="0"/>
+    <line fill="none" stroke="#E54535" stroke-width="10" stroke-linejoin="round" stroke-dasharray="13.4428,13.4428" x1="349.302" y1="95.243" x2="302.253" y2="95.529"/>
+    <line class="anim anim-8" fill="none" stroke="#FAFAFA" stroke-width="11" x1="350.302" y1="95.243" x2="303.253" y2="95.529"/>
+    <circle class="anim anim-9" fill="#E54535" cx="368" cy="94.606" r="0"/>
+    <line fill="none" stroke="#E54535" stroke-width="10" stroke-linejoin="round" stroke-dasharray="11.1188,11.1188" x1="433.352" y1="25.545" x2="376.61" y2="86.654"/>
+    <line class="anim anim-10" fill="none" stroke="#FAFAFA" stroke-width="11" x1="434.352" y1="24.545" x2="377.61" y2="85.654"/>
+    <circle class="anim anim-11" fill="#E54535" cx="445" cy="13" r="0"/>
+  </g>
+  </svg>
+  
+  <div id="home-copy">
+    Record your progress and get instant data visualization.
+  </div>
   <ng-include src="'/static/user/partial/form/user-new.html'"></ng-include>
   <div ui-view></div>
 </div>

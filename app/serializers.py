@@ -27,10 +27,7 @@ def user_short(usr):
     return srl
 
 def user_records(usr):
-    srl = {
-        "records": [record_short(r) for r in usr.get_record_all()]
-    }
-    return srl
+    return [record_short(r) for r in usr.get_record_all()]
 
 def record(rcd):
     srl = record_short(rcd)
@@ -49,17 +46,14 @@ def record_short(rcd):
     return srl
 
 def record_sets(rcd):
-    srl = {
-        "sets": [set_short(s) for s in rcd.get_set_all()]
-    }
-    return srl
+    return [set_short(s) for s in rcd.get_set_all()]
 
 
 def set(set):
     srl = set_short(set)
     srl["unit"] = set.unit
     srl["unit_short"] = set.unit_short
-    srl["data"] = data_short_for_data_type(set)
+    srl["data_set"] = data_short_for_data_type(set)
     return srl
 
 
@@ -76,10 +70,7 @@ def set_short(set):
     return srl
 
 def set_data(set):
-    srl = {
-        "data": data_short_for_data_type(set)
-    }
-    return srl
+    return data_short_for_data_type(set)
 
 def data(set, data):
     if set.data_type == DATA_TYPE_INT["count"]:

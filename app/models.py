@@ -79,6 +79,7 @@ class User(db.Model):
         errors = {}
         if isinstance(values, dict):
             username, email, password = values.get('username'), values.get('email'), values.get('password')
+            print email == ''
             if username == None:
                 errors['username'] = 'Username is required'
             if password == None:
@@ -88,7 +89,7 @@ class User(db.Model):
                     errors['username'] = 'Username is already in use'
                 if re.search(VALID_PSWD_RE, password) == None:
                     errors['password'] = 'Invalid password'
-            if email != None:
+            if email != None and email != '':
                 if not re.search(VALID_EMAIL_RE, email):
                     errors['email'] = 'Invalid email'
                 elif email != '' and User.with_email(email) != None:

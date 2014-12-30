@@ -41,6 +41,7 @@ var lib_paths = {
 var app_paths = {
   "app":            "app.js",
   "api":            "service/api.js",
+  "model":          "service/model.js",
   "root":           "partial/root/root.js",
   "home":           "partial/home/home.js",
   "dash":           "partial/dash/dash.js",
@@ -68,6 +69,7 @@ var app_skel = [
 var app_ang = [
   "app",
   "api",
+  "model",
   "root",
   "home",
   "dash",

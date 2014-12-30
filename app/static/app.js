@@ -32,7 +32,8 @@ angular.module('app').constant('path',
       route: {
         init:   function() { return path.api.join_root(path.api.sub.init); },
         login:  function() { return path.api.join_root(path.api.sub.login); },
-        logout: function() { return path.api.join_root(path.api.sub.logout); }
+        logout: function() { return path.api.join_root(path.api.sub.logout); },
+        user: function(id) { return path.api.join_root(path.api.uri.user(id)); }
       },
       build: function(args) {
         var sub_paths = [];
@@ -48,9 +49,7 @@ angular.module('app').constant('path',
             }
           }
         }
-        var p = path.api.join_paths_root(sub_paths);
-        console.log('built path ' + p + ' from ' + args);
-        return p;
+        return path.api.join_paths_root(sub_paths);
       },
       join_root: function(sub_path) {
         return path.join(path.api.root, sub_path);
@@ -66,11 +65,11 @@ angular.module('app').constant('path',
     logout_redirect: "root.home",
     links: {
       default: [
-        { name: "Home",         route: "root.home" }
+        //{ name: "Home",         route: "root.home" }
       ],
       user: [
         { name: "Dashboard",    route: "root.dash" },
-        { name: "My Sets",      route: "root.set" },
+        //{ name: "My Sets",      route: "root.set" },
         { name: "My Records",   route: "root.record" },
         { name: "Settings",     route: "root.settings" }
       ]
@@ -135,11 +134,11 @@ angular.module('app').config(
         templateUrl: path.join_root('user/partial/settings/settings.html'),
         data: { auth: 'User' }
       })
-      .state('root.set', {
-        url: '/sets',
-        templateUrl: path.join_root('chart/partial/set/list/list.html'),
-        data: { auth: 'User' }
-      })
+      // .state('root.set', {
+      //   url: '/sets',
+      //   templateUrl: path.join_root('chart/partial/set/list/list.html'),
+      //   data: { auth: 'User' }
+      // })
       .state('root.record', {
         url: '/records',
         templateUrl: path.join_root('chart/partial/record/list/list.html'),

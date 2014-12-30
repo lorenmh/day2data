@@ -16,7 +16,7 @@ angular.module('user').factory('userService', ['$state', 'path', 'api',
 
     user.observe_logged_in = function(cb) {
       logged_in_observers.push(cb);
-    }
+    };
 
     user.observe_login = function(cb) {
       login_observers.push(cb);
@@ -80,7 +80,6 @@ angular.module('user').factory('userService', ['$state', 'path', 'api',
       api.login(id, password)
         .success(function(d) {
           user.init(d.message);
-          $state.go(path.login_redirect);
         })
         .error(function(d) {
           set_login_errors(d.message);
@@ -90,6 +89,9 @@ angular.module('user').factory('userService', ['$state', 'path', 'api',
     user.init = function(user) {
       if (user) {
         set_id(user.id);
+        if ($state.current.name === 'root.home') {
+          $state.go(path.login_redirect);
+        }
       }
     };
 

@@ -6,7 +6,7 @@ import serializers, json, os
 from models import User, Record, Set, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
-from api_response import response_success_post, response_error_post
+from api_response import response_success, response_error
 
 #r_key = redis.StrictRedis(host='localhost', port=6379, db=1)
 
@@ -40,15 +40,15 @@ def login(values):
         if user:
             if user.matches_password(password):
                 session['id'] = username
-                return response_success_post(serializers.user(user))
+                return response_success(serializers.user(user))
             else:
                 set_failed_login(address)
-                return response_error_post("username password combination incorrect")
+                return response_error("username password combination incorrect")
         else:
             set_failed_login(address)
-            return response_error_post("username password combination incorrect")
+            return response_error("username password combination incorrect")
     else:
-        return response_error_post("maximum number of login attempts exceeded, please try again later")
+        return response_error("maximum number of login attempts exceeded, please try again later")
 
 @app.route('/api/logout')
 def logout():
@@ -72,9 +72,9 @@ def api_user_new(values=None):
     if validation == True:
         user = User.from_values(values)
         session['id'] = user.username
-        return response_success_post(serializers.user(user))
+        return response_success(serializers.user(user))
     else:
-        return response_error_post(validation)
+        return response_error(validation)
 
 # get: return user details
 # put / post: update user details
@@ -82,16 +82,16 @@ def api_user_new(values=None):
 @get_user_or_404
 def api_user(user):
     if request.method == 'GET':
-        return json.dumps(serializers.user(user))
+        return response_success(serializers.user(user))
     else:
         values = request.get_json(force=True)
         validation = User.validate(values)
         if validation == True:
             user = User.from_values(values)
             session['id'] = user.username
-            return response_success_post(serializers.user(user))
+            return response_success(serializers.user(user))
         else:
-            return response_error_post(validation)
+            return response_error(validation)
 
 # get: return all record
 # post: create new record
@@ -100,14 +100,14 @@ def api_user(user):
 @get_post_data
 def api_record_index(user, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.user_records(user))
+        return response_success(serializers.user_records(user))
     else:
         validation = Record.validate(values)
         if validation == True:
-            r = Record.from_values(values)
-            return response_success_post(serializers.record(r))
+            r = Record.from_values(user, values)
+            return response_success(serializers.record(r))
         else:
-            return response_error_post(validation)
+            return response_error(validation)
 
 # get: return record
 # put / post: update record
@@ -117,7 +117,7 @@ def api_record_index(user, values=None):
 @get_post_data
 def api_record(user, record, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.record(record))
+        return response_success(serializers.record(record))
     else: 
         #TODO: add editing stuff
         return 'blah'
@@ -136,9 +136,9 @@ def api_set_index(user, record, values=None):
         validation = Set.validate(values)
         if validation == True:
             data_set = Set.from_values(record=record, values=values)
-            return response_success_post(serializers.set(data_set))
+            return response_success(serializers.set(data_set))
         else:
-            return response_error_post(validation)
+            return response_error(validation)
 
 
 # get: return set
@@ -166,9 +166,9 @@ def api_data_index(user, record, set, values=None):
         validation = DataClass.validate(set=set, values=values)
         if validation == True:
             data = DataClass.from_values(set=set, values=values)
-            return response_success_post(serializers.data(set, data))
+            return response_success(serializers.data(set, data))
         else:
-            return response_error_post(validation)
+            return response_error(validation)
 
 # get: return data
 # put / post: update data

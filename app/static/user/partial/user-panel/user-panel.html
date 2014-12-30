@@ -1,14 +1,12 @@
 <div ng-controller="UserPanelCtrl">
-  <h1>USER PANEL</h1>
-  <div class="login-status" ng-if="id">
-    <div class="logged-in text">logged in as: <span class="username text">{{ id }}</span></div>
-    <button ng-click="logout()" class="logout btn btn-default">logout</button>
+  <div class="login-form-wrap" ng-if="id">
+    <button ng-click="logout()" class="logout btn d2d-btn-hide">Sign out</button>
+    <div class="user-panel-logged-in text">User: <span class="user-panel-username">{{ id }}</span></div>
   </div>
-  <div class="login-status" ng-if="!id">
-    <div class="logged-out text">not logged in</div>
-    <button ng-click="toggle_login_form()" class="login btn btn-{{ !login_form ? 'primary' : 'warning' }}">{{ login_form ? 'hide' : 'login'}}</button>
+  <div class="login-form-wrap {{ login_form ? 'expanded' : '' }}" ng-if="!id">
+    <button ng-click="toggle_login_form()" class="login btn d2d-btn-{{ login_form ? 'hide' : '2' }}">{{ login_form ? 'Hide' : 'Sign In'}}</button>
 
-    <form ng-if="login_form" ng-submit="submit()" ng-class="{errors: login_errors}">
+    <form ng-if="login_form" ng-submit="submit()" class="login-form" ng-class="{errors: login_errors}">
         <div ng-if="login_errors" class="login-errors">{{ login_errors }}</div>
         <div class="form-group">
           <label class="control-label" for="username-input">Username:</label>
@@ -18,7 +16,7 @@
           <label class="control-label" for="password-input">Password:</label>
           <input type="password" class="form-control" id="password-input" />
         </div>
-      <button type="submit" class="login submit btn btn-success">submit</button>
+      <button type="submit" class="login submit btn d2d-btn-full d2d-btn-3">Submit</button>
     </form>
 
   </div>

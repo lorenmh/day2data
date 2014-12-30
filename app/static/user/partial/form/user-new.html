@@ -1,17 +1,24 @@
 <div ng-controller="FormUserNewCtrl">
-  <h1>FORM USER NEW</h1>
-  <div class="login-status" ng-if="!logged_in">
-    <button ng-click="toggle_form_user_new()" class="sign-up btn btn-{{ !show_form ? 'primary' : 'warning' }}">{{ show_form ? 'hide' : 'Sign Up'}}</button>
-
+  <div class="sign-up" ng-if="logged_in">
+    <a ui-sref="root.dash" class="sign-up btn d2d-btn-1">View Dashboard</a>
+  </div>
+  <div class="sign-up" ng-if="!logged_in">
+    <button ng-click="toggle_form()" class="sign-up btn d2d-btn-{{ !show_form ? '1' : 'hide' }}">{{ show_form ? 'hide' : 'Sign Up'}}</button>
     <form ng-if="show_form" ng-submit="submit()" ng-class="{errors: form_errors}">
-        <div ng-if="form_errors" class="form-errors">{{ login_errors }}</div>
-        <div class="form-group">
-          <label class="control-label" for="username-input">Username:</label>
-          <input type="text" class="form-control" id="username-input" />
+        <div ng-if="form_errors" class="form-errors">
+          <p class="form-error" ng-repeat="error in form_errors">{{ error }}</p>
         </div>
         <div class="form-group">
-          <label class="control-label" for="password-input">Password:</label>
-          <input type="password" class="form-control" id="password-input" />
+          <label class="control-label" for="new-user-username">Username:</label>
+          <input ng-model="form_data.username" type="text" class="form-control" id="new-user-username" />
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="new-user-email">Email: (optional)</label>
+          <input ng-model="form_data.email" type="text" class="form-control" id="new-user-email" />
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="new-user-password">Password:</label>
+          <input ng-model="form_data.password" type="password" class="form-control" id="new-user-password" />
         </div>
       <button type="submit" class="login submit btn btn-success">submit</button>
     </form>

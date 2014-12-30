@@ -2,11 +2,8 @@ import json
 from functools import wraps
 from flask import request, session
 from .models import User, Record, Set
-from api_response import response_success_post, response_error_post
+from api_response import response_success, response_error
 from .redis_auth import auth_token_valid
-
-def api_error_message(text):
-    return json.dumps({'error': text})
 
 def get_post_data(fn):
     @wraps(fn)
@@ -17,7 +14,7 @@ def get_post_data(fn):
                 if auth_token_valid(token):
                     kwargs['values'] = request.get_json(force=True)
                     return fn(*args, **kwargs)
-            return response_error_post({ 'token': 'Invalid token' })
+            return response_error({ 'token': 'Invalid token' })
         return fn(*args, **kwargs)
     return wrapper
 
@@ -30,7 +27,7 @@ def get_user_or_404(fn):
             kwargs['user'] = user
             return fn(*args, **kwargs)
         else:
-            return api_error_message("user_id not found"), 404
+            return response_error( {"user_id": "user id not found"} )
     return wrapper
 
 def get_record_or_404(fn):
@@ -43,7 +40,7 @@ def get_record_or_404(fn):
             kwargs["record"] = record
             return fn(*args, **kwargs)
         else:
-            return api_error_message("record_id not found"), 404
+            return response_error( {"record_id": "record id not found"} )
     return wrapper
 
 def get_set_or_404(fn):
@@ -56,7 +53,7 @@ def get_set_or_404(fn):
             kwargs["set"] = set
             return fn(*args, **kwargs)
         else:
-            return api_error_message("set_id not found"), 404
+            return response_error( {"set_id": "set id not found"} )
     return wrapper
 
 def get_data_or_404(fn):
@@ -69,5 +66,5 @@ def get_data_or_404(fn):
             kwargs["data"] = data
             return fn(*args, **kwargs)
         else:
-            return api_error_message("data_id not found"), 404
+            return response_error( {"data_id": "data id not found"} )
     return wrapper
