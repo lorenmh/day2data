@@ -8,10 +8,10 @@ db.create_all()
 usr = User('foo', 'pswd')
 usr.create()
 
-col = Collection(1, 'First Record')
-col.create()
+# col = Collection(1, 'First Record')
+# col.create()
 
-cset = DataSet(1, 1, 'First Count Set')
+cset = Dataset(1, 1, 'First Count Set')
 cset.create()
 '''
 vset = Set(1, 2, 'First Value Set')

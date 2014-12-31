@@ -1,9 +1,9 @@
 from flask import render_template, send_from_directory, request, session, Response, make_response
 from app import app, db
-from decorators import (get_user_or_404, get_collection_or_404, get_dataset_or_404, 
-    get_data_or_404, get_post_data)
+from decorators import (get_user_or_404, get_dataset_or_404,
+    get_data_or_404, get_post_data, get_post_data_and_auth)
 import serializers, json, os
-from models import User, Collection, DataSet, DATA_TYPE_CLASS
+from models import User, Dataset, DATA_TYPE_CLASS#, Collection
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
 from api_response import response_success, response_error
@@ -16,20 +16,11 @@ def xsrf_cookie_response(template):
     res.set_cookie('XSRF-TOKEN', token)
     return res
 
-#returns the app template if the route doesnt start with api or static
-@app.route('/<regex("(?!(?:^api|^static)).*"):path>')
-def all(path):
-    return xsrf_cookie_response('index.html')
-
 @app.route('/')
 def root():
     return xsrf_cookie_response('index.html')
 
-@app.route('/static/<path:path>')
-def static_file(path):
-    return app.send_static_file(os.path.join('static', path))
-
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login/', methods=['POST'])
 @get_post_data
 def login(values):
     address = request.remote_addr
@@ -50,12 +41,12 @@ def login(values):
     else:
         return response_error("maximum number of login attempts exceeded, please try again later")
 
-@app.route('/api/logout')
+@app.route('/api/logout/')
 def logout():
     session.pop('id', None)
     return '', 200
 
-@app.route('/api/init', methods=["GET"])
+@app.route('/api/init/', methods=["GET"])
 def init():
     if 'id' in session:
         user = User.with_username(session["id"])
@@ -93,90 +84,95 @@ def api_user(user):
         else:
             return response_error(validation)
 
-# get: return all collection
-# post: create new collection
-@app.route('/api/u/<user_id>/r/', methods=['GET', 'POST'])
-@get_user_or_404
-@get_post_data
-def api_collection_index(user, values=None):
-    if request.method == 'GET':
-        return json.dumps(serializers.user_collections(user))
-    else:
-        validation = Collection.validate(values)
-        if validation == True:
-            r = Collection.from_values(user, values)
-            return response_success(serializers.collection(r))
-        else:
-            return response_error(validation)
-
-# get: return collection
-# put / post: update collection
-@app.route('/api/u/<user_id>/r/<collection_id>/', methods=['GET', 'POST'])
-@get_user_or_404
-@get_collection_or_404
-@get_post_data
-def api_collection(user, collection, values=None):
-    if request.method == 'GET':
-        return json.dumps(serializers.collection(collection))
-    else: 
-        #TODO: add editing stuff
-        return 'blah'
-
-
 # get: return all sets
 # post: create new set
-@app.route('/api/u/<user_id>/r/<collection_id>/s/', methods=['GET', 'POST'])
+@app.route('/api/s/', methods=['GET', 'POST'])
 @get_user_or_404
-@get_collection_or_404
-@get_post_data
-def api_set_index(user, collection, values=None):
+@get_post_data_and_auth
+def api_dataset_index(user, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.collection_sets(collection))
+        return json.dumps(serializers.user_datasets(user))
     else:
-        validation = DataSet.validate(values)
+        validation = Dataset.validate(values)
         if validation == True:
-            data_set = DataSet.from_values(collection=collection, values=values)
-            return response_success(serializers.set(data_set))
+            dataset = Dataset.from_values(user=user, values=values)
+            return response_success(serializers.dataset(dataset))
         else:
             return response_error(validation)
 
-
-# get: return set
-# put / post: update set
-@app.route('/api/u/<user_id>/r/<collection_id>/s/<set_id>/')
+@app.route('/api/s/<dataset_id>/')
 @get_user_or_404
-@get_collection_or_404
 @get_dataset_or_404
-@get_post_data
-def api_set(user, collection, set, values=None):
-    return json.dumps(serializers.set(set))
+def api_dataset(user, dataset, values=None):
+    return json.dumps(serializers.dataset(dataset))
 
 # get: return all data
 # post: create new data
-@app.route('/api/u/<user_id>/r/<collection_id>/s/<set_id>/d/', methods=['GET', 'POST'])
+@app.route('/api/s/<dataset_id>/d/', methods=['GET', 'POST'])
 @get_user_or_404
-@get_collection_or_404
 @get_dataset_or_404
-@get_post_data
-def api_data_index(user, collection, set, values=None):
+@get_post_data_and_auth
+def api_dataset_data_index(user, dataset, values=None):
     if request.method == 'GET':
-        return json.dumps(serializers.set_data(set))
+        return json.dumps(serializers.dataset_data(dataset))
     else:
-        DataClass = DATA_TYPE_CLASS[set.data_type]
-        validation = DataClass.validate(set=set, values=values)
+        DataClass = DATA_TYPE_CLASS[dataset.data_type]
+        validation = DataClass.validate(dataset=dataset, values=values)
         if validation == True:
-            data = DataClass.from_values(set=set, values=values)
-            return response_success(serializers.data(set, data))
+            data = DataClass.from_values(dataset=dataset, values=values)
+            return response_success(serializers.data(dataset, data))
         else:
             return response_error(validation)
 
-# get: return data
-# put / post: update data
-@app.route('/api/u/<user_id>/r/<collection_id>/s/<set_id>/d/<data_id>/')
+@app.route('/api/u/<user_id>/s/<dataset_id>/d/<data_id>/')
 @get_user_or_404
-@get_collection_or_404
 @get_dataset_or_404
 @get_data_or_404
-@get_post_data
-def api_data(user, collection, set, data, values=None):
-    return json.dumps(serializers.data(set, data))
+def api_dataset_data(user, dataset, data, values=None):
+    return json.dumps(serializers.data(dataset, data))
+
+# get: return all sets
+# post: create new set
+@app.route('/api/u/<user_id>/s/')
+@get_user_or_404
+def api_user_dataset_index(user):
+    return json.dumps(serializers.user_datasets(user))
+
+# get: return set
+# put / post: update set
+@app.route('/api/u/<user_id>/s/<dataset_id>/')
+@get_user_or_404
+@get_dataset_or_404
+def api_user_set(user, dataset):
+    return json.dumps(serializers.dataset(dataset))
+
+# get: return all data
+# post: create new data
+@app.route('/api/u/<user_id>/s/<dataset_id>/d/')
+@get_user_or_404
+@get_dataset_or_404
+def api_user_dataset_data_index(user, dataset):
+    return json.dumps(serializers.dataset_data(dataset))
+
+# get: return data
+# put / post: update data
+@app.route('/api/u/<user_id>/s/<dataset_id>/d/<data_id>/')
+@get_user_or_404
+@get_dataset_or_404
+@get_data_or_404
+def api_user_dataset_data(user, dataset, data):
+    return json.dumps(serializers.data(dataset, data))
+
+@app.route('/api/<path:path>')
+def api_404(path):
+    return response_error({'path': 'no resource at this path'})
+
+@app.route('/static/<path:path>')
+def static_file(path):
+    return app.send_static_file(os.path.join('static', path))
+
+#returns the app template if the route doesnt start with api or static
+#@app.route('/<regex("(?!(?:api|static)).*"):path>')
+@app.route('/<path:path>')
+def all(path):
+    return xsrf_cookie_response('index.html')

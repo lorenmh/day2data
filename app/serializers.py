@@ -19,35 +19,10 @@ def user(usr):
     return srl
 
 def user_short(usr):
-    srl = {
-        "user": {
-            "id": usr.username
-        }
-    }
-    return srl
+    return { "id": usr.username }
 
-def user_records(usr):
-    return [record_short(r) for r in usr.get_record_all()]
-
-def record(rcd):
-    srl = record_short(rcd)
-    srl["datasets"] = [dataset_short(dataset) for dataset in rcd.get_dataset_all()]
-    return srl
-
-def record_short(rcd):
-    srl = {
-        "id": rcd.res_id,
-        "owner": user_short(User.query.get(rcd.owner)),
-        "title": rcd.title,
-        "text": rcd.text,
-        "time": dt_to_ms(rcd.timestamp),
-        "count": rcd.get_dataset_count()
-    }
-    return srl
-
-def record_datasets(rcd):
-    return [dataset_short(s) for s in rcd.get_dataset_all()]
-
+def user_datasets(usr):
+    return [dataset_short(s) for s in usr.get_dataset_all()]
 
 def dataset(dataset):
     srl = dataset_short(dataset)
@@ -60,6 +35,7 @@ def dataset(dataset):
 def dataset_short(dataset):
     srl = {
         "id": dataset.res_id,
+        "user": user_short(User.query.get(dataset.user)),
         "title": dataset.title,
         "text": dataset.text,
         "time": dt_to_ms(dataset.timestamp),

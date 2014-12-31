@@ -76,9 +76,17 @@ angular.module('app').constant('path',
     },
     join: function(base_path, sub_path) {
       if (sub_path.charAt(0) === "/") {
-        return base_path + sub_path.slice(1);
+        if (sub_path.charAt(sub_path.length - 1) === "/") {
+          return base_path + sub_path.slice(1);
+        } else {
+          return base_path + sub_path.slice(1) + "/";
+        }
       } else {
-        return base_path + sub_path;
+        if (sub_path.charAt(sub_path.length - 1) === "/") {
+          return base_path + sub_path;
+        } else {
+          return base_path + sub_path + "/";
+        }
       }
     },
     join_root: function(sub_path) {

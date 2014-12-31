@@ -5,11 +5,11 @@ import os, binascii, bcrypt, re
 
 VALID_PSWD_RE = "^[\w\!\@\#\$\%\^\&\*\-]{4,32}$"
 VALID_EMAIL_RE = "^.+@.+\..+$"
-VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{3,16}$"
+VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[a-z-]{3,16}$"
 VALID_UNIT_SHORT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{,12}$"
 # 1 - 32 chars, valid a-b-c, not -a-b or a-b- or a--b. a b c matches, not a  b
 # matches if false
-VALID_TITLE_RE = "^(?!.*(?:^|[_- ])(?:[_- ]|$))[\w- ]{1,32}$"
+VALID_TITLE_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{1,32}$"
 
 DATA_TYPE_INT = {
     "count": 1,
@@ -63,11 +63,11 @@ class User(db.Model):
     def create(self):
         self.save()
 
-    def get_collection_with_res_id(self, res_id):
-        return Collection.query.filter_by(user=self.id).filter_by(res_id=res_id).first()
+    def get_dataset_with_res_id(self, res_id):
+        return Dataset.query.filter_by(user=self.id).filter_by(res_id=res_id).first()
 
-    def get_collection_all(self):
-        return Collection.query.filter_by(user=self.id).all()
+    def get_dataset_all(self):
+        return Dataset.query.filter_by(user=self.id).all()
 
     @staticmethod
     def from_values(values):
@@ -86,7 +86,9 @@ class User(db.Model):
             if password == None:
                 errors['password'] = 'Password is required'
             if username != None and password != None:
-                if User.with_username(username) != None:
+                if not re.search(VALID_USERNAME_RE, username):
+                    errors['username'] = 'Invalid username'
+                elif User.with_username(username) != None:
                     errors['username'] = 'Username is already in use'
                 if re.search(VALID_PSWD_RE, password) == None:
                     errors['password'] = 'Invalid password'
@@ -423,8 +425,8 @@ DATA_TYPE_CLASS = {
 }
 
 # each dataset should have relative resource ids (relative to collection)
-def next_res_id_for_dataset(collection):
-    last = DataSet.query.filter_by(collection=collection).order_by("-id").first()
+def next_res_id_for_dataset(user):
+    last = Dataset.query.filter_by(user=user).order_by("-id").first()
     if last:
         return last.res_id + 1
     return 1
@@ -440,12 +442,13 @@ def data_model_from_data_type(data_type):
         return ChoiceData
     return None
 
-class DataSet(db.Model):
+class Dataset(db.Model):
     __tablename__ = "dataset"
     id = db.Column(db.Integer, primary_key=True)
+    user = db.Column(db.Integer, db.ForeignKey('user.id'))
+    permissions_view = db.Column(db.Integer)
     res_id = db.Column(db.Integer)
     data_type = db.Column(db.Integer)
-    collection = db.Column(db.Integer, db.ForeignKey('collection.id'))
 
     unit_short = db.Column(db.String(12))
     unit = db.Column(db.String(32))
@@ -463,7 +466,7 @@ class DataSet(db.Model):
         db.session.commit()
 
     def create(self):
-        self.res_id = next_res_id_for_dataset(self.collection)
+        self.res_id = next_res_id_for_dataset(self.user)
         self.save()
 
     def get_data_with_res_id(self, res_id):
@@ -479,9 +482,9 @@ class DataSet(db.Model):
         return mdl.query.filter_by(dataset=self.id).count()
 
     @staticmethod
-    def from_values(collection, values):
+    def from_values(user, values):
         title, text, data_type, unit, unit_short, choice_keys = values.get('title'), values.get('text'), int(values.get('data_type')), values.get('unit'), values.get('unit_short'), values.get('choice_keys')
-        s = DataSet(collection=collection.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
+        s = Dataset(user=user.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
         s.create()
         if data_type == DATA_TYPE_INT['choice']:
             for key in choice_keys:
@@ -537,9 +540,9 @@ class DataSet(db.Model):
         else:
             return errors
 
-    def __init__(self, collection, data_type, title, timestamp=None,
+    def __init__(self, user, data_type, title, timestamp=None,
             text=None, unit=None, unit_short=None):
-        self.collection = collection
+        self.user = user
         self.data_type = data_type
         self.title = title
         self.timestamp = timestamp
@@ -548,81 +551,5 @@ class DataSet(db.Model):
         self.unit_short = unit_short
 
     def __repr__(self):
-        return "<DataSet id:%s collection.id:%s res_id:%s data_type:%s>" % (self.id, 
-            self.collection, self.res_id, DATA_TYPE_STR[self.data_type])
-
-def next_res_id_for_collection(mdl, user):
-    last = db.session.query(mdl).filter_by(user=user).order_by("-id").first()
-    if last:
-        return last.res_id + 1
-    return 1
-
-class Collection(db.Model):
-    __tablename__ = "collection"
-    id = db.Column(db.Integer, primary_key=True)
-    res_id = db.Column(db.Integer)
-    user = db.Column(db.Integer, db.ForeignKey('user.id'))
-    permissions_view = db.Column(db.Integer)
-
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    title = db.Column(db.Text)
-    text = db.Column(db.Text, nullable=True)
-
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def create(self):
-        self.res_id = next_res_id_for_collection(Collection, self.user)
-        self.save()
-
-    def get_dataset_with_res_id(self, res_id):
-        return DataSet.query.filter_by(collection=self.id).filter_by(res_id=res_id).first()
-
-    def get_dataset_count(self):
-        return DataSet.query.filter_by(collection=self.id).count()
-
-    def get_dataset_all(self):
-        return DataSet.query.filter_by(collection=self.id).all()
-
-    def __init__(self, user, title, permissions_view=None,
-            timestamp=None, text=None):
-        if permissions_view == None:
-            permissions_view = PERMISSIONS_VIEW_INT['private']
-        self.user = user
-        self.title = title
-        self.permissions_view = permissions_view
-        self.timestamp = timestamp
-        self.text = text
-
-    def __repr__(self):
-        return "<Collection id:%s user.id:%s res_id:%s>" % (self.id, self.user,
-            self.res_id)
-
-    @staticmethod
-    def from_values(user, values):
-        title, text, permissions_view = values.get('title'), values.get('text'), values.get('permissions_view')
-        r = Collection(title=title, user=user.id, text=text, permissions_view=permissions_view)
-        r.create()
-        return r
-
-    @staticmethod
-    def validate(values=None):
-        errors = {}
-        if isinstance(values, dict):
-            title = values.get('title')
-            permissions_view = values.get('permissions')
-            if title == None:
-                errors['title'] = 'Title is required'
-            elif re.search(VALID_TITLE_RE, title) == None:
-                errors['title'] = 'Invalid title'
-            if permissions_view != None:
-                if permissions_view not in PERMISSIONS_VIEW_STR:
-                    errors['permissions'] = 'Invalid permissions'
-        else:
-            errors['title'] = 'Title is required'
-        if errors == {}:
-            return True
-        else:
-            return errors
+        return "<Dataset id:%s user.id:%s res_id:%s data_type:%s>" % (self.id, 
+            self.user, self.res_id, DATA_TYPE_STR[self.data_type])
