@@ -1,9 +1,9 @@
 from flask import render_template, send_from_directory, request, session, Response, make_response
 from app import app, db
 from decorators import (get_user_or_404, get_dataset_or_404,
-    get_data_or_404, get_post_data, get_post_data_and_auth)
+    get_data_or_404, get_post_data)
 import serializers, json, os
-from models import User, Dataset, DATA_TYPE_CLASS#, Collection
+from models import User, Dataset, DATA_TYPE_CLASS
 from redis_login import can_attempt_login, set_failed_login
 from redis_auth import auth_token_valid, touch_auth_token
 from api_response import response_success, response_error
@@ -88,7 +88,7 @@ def api_user(user):
 # post: create new set
 @app.route('/api/s/', methods=['GET', 'POST'])
 @get_user_or_404
-@get_post_data_and_auth
+@get_post_data
 def api_dataset_index(user, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.user_datasets(user))
@@ -111,7 +111,7 @@ def api_dataset(user, dataset, values=None):
 @app.route('/api/s/<dataset_id>/d/', methods=['GET', 'POST'])
 @get_user_or_404
 @get_dataset_or_404
-@get_post_data_and_auth
+@get_post_data
 def api_dataset_data_index(user, dataset, values=None):
     if request.method == 'GET':
         return json.dumps(serializers.dataset_data(dataset))
@@ -124,7 +124,7 @@ def api_dataset_data_index(user, dataset, values=None):
         else:
             return response_error(validation)
 
-@app.route('/api/u/<user_id>/s/<dataset_id>/d/<data_id>/')
+@app.route('/api/s/<dataset_id>/d/<data_id>/')
 @get_user_or_404
 @get_dataset_or_404
 @get_data_or_404

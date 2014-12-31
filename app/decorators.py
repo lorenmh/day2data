@@ -18,23 +18,6 @@ def get_post_data(fn):
         return fn(*args, **kwargs)
     return wrapper
 
-def get_post_data_and_auth(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        if request.method == 'POST':
-            user = kwargs["user"]
-            username = session.get('id')
-            if username == None or username != user.username:
-                return response_error({ 'auth': 'Unauthorized request' })
-            token = request.headers.get('X-XSRF-TOKEN')
-            if token != None:
-                if auth_token_valid(token):
-                    kwargs['values'] = request.get_json(force=True)
-                    return fn(*args, **kwargs)
-            return response_error({ 'token': 'Invalid token' })
-        return fn(*args, **kwargs)
-    return wrapper
-
 def get_user_or_404(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
