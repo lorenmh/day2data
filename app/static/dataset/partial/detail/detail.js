@@ -1,5 +1,6 @@
-angular.module('dataset').controller( 'SetDetailCtrl', [
-          '$scope',
-  function($scope) {
-    $scope.test = "set detail scope";
+angular.module('dataset').controller( 'DatasetDetailCtrl', [
+          '$scope', '$stateParams',
+  function($scope, $stateParams) {
+    alert('here');
+    $scope.test = $stateParams.dataset_id;
 }]);

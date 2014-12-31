@@ -52,6 +52,7 @@ var app_paths = {
   "userService":    "user/service/userService.js",
   "dataset":        "dataset/dataset.js",
   "dataService":    "dataset/service/dataService.js",
+  "dataset-base":   "dataset/partial/base/base.js",
   "dataset-list":   "dataset/partial/list/list.js",
   "dataset-detail": "dataset/partial/detail/detail.js",
   "form-user-new":  "user/partial/form/user-new.js"
@@ -78,6 +79,7 @@ var app_ang = [
   "sidebar",
   "userService",
   "dataService",
+  "dataset-base",
   "dataset-list",
   "dataset-detail",
   "form-user-new"

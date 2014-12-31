@@ -68,7 +68,7 @@ angular.module('app').constant('path',
       ],
       user: [
         { name: "Dashboard",    route: "root.dash" },
-        { name: "Datasets",      route: "root.dataset" },
+        { name: "Datasets",      route: "root.dataset.list" },
         { name: "Settings",     route: "root.settings" }
       ]
     },
@@ -141,8 +141,19 @@ angular.module('app').config(
         data: { auth: 'User' }
       })
       .state('root.dataset', {
+        abstract: true,
         url: '/datasets',
+        templateUrl: path.join_root('dataset/partial/base/base.html'),
+        data: { auth: 'User' }
+      })
+      .state('root.dataset.list', {
+        url: '',
         templateUrl: path.join_root('dataset/partial/list/list.html'),
+        data: { auth: 'User' }
+      })
+      .state('root.dataset.detail', {
+        url: '/:dataset_id',
+        templateUrl: path.join_root('dataset/partial/detail/detail.html'),
         data: { auth: 'User' }
       });
     $urlRouterProvider.otherwise('/');

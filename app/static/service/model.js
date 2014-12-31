@@ -9,9 +9,7 @@ angular.module('app').factory('model', [
 
     model.User = $resource('/api/u/:u/', { u: "@uid", r: "@rid", s: "@sid" }, {'query': {isArray: false}});
 
-    model.Record = $resource('/api/u/:u/r/:r/', { u: "@uid", r: "@rid" }, {'query': {isArray: true}});
-
-    model.Set = $resource('/api/u/:u/r/:r/s/:s/', { u: "@uid", r: "@rid", s: "@sid" }, {'query': {isArray: false}});
+    model.Dataset = $resource('/api/s/:s/', { u: "@uid", r: "@rid", s: "@sid" });
 
     return model;
 }]);
