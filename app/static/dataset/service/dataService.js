@@ -1,4 +1,4 @@
-angular.module('chart').factory('dataService', [
+angular.module('dataset').factory('dataService', [
           '$state', '$resource',
   function($state, $resource) {
     /*var blah = function(d) {

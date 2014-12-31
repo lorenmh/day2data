@@ -50,12 +50,10 @@ var app_paths = {
   "settings":       "user/partial/settings/settings.js",
   "user-panel":     "user/partial/user-panel/user-panel.js",
   "userService":    "user/service/userService.js",
-  "chart":          "chart/chart.js",
-  "dataService":    "chart/service/dataService.js",
-  "set-list":       "chart/partial/set/list/list.js",
-  "set-detail":     "chart/partial/set/detail/detail.js",
-  "record-list":    "chart/partial/record/list/list.js",
-  "record-detail":  "chart/partial/record/detail/detail.js",
+  "dataset":        "dataset/dataset.js",
+  "dataService":    "dataset/service/dataService.js",
+  "dataset-list":   "dataset/partial/list/list.js",
+  "dataset-detail": "dataset/partial/detail/detail.js",
   "form-user-new":  "user/partial/form/user-new.js"
 };
 
@@ -74,16 +72,14 @@ var app_ang = [
   "home",
   "dash",
   "user",
-  "chart",
+  "dataset",
   "settings",
   "user-panel",
   "sidebar",
   "userService",
   "dataService",
-  "set-list",
-  "set-detail",
-  "record-list",
-  "record-detail",
+  "dataset-list",
+  "dataset-detail",
   "form-user-new"
 ];
 

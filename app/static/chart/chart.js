@@ -1,1 +1,0 @@
-angular.module('chart', ['ui.router', 'ngResource']);

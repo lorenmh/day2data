@@ -1,4 +1,4 @@
-angular.module('chart').controller( 'SetListCtrl', [
+angular.module('dataset').controller( 'SetListCtrl', [
           '$scope', 'model',
   function($scope, model) {
     var z = model.Record.get({ u: 'foo' });

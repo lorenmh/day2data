@@ -1,4 +1,4 @@
-angular.module('app', ['ui.router', 'user', 'chart']);
+angular.module('app', ['ui.router', 'user', 'dataset']);
 
 angular.module('app').constant('path', 
 (function() {
@@ -11,8 +11,7 @@ angular.module('app').constant('path',
         login:  "login",
         logout: "logout",
         user: "u",
-        record: "r",
-        set: "s",
+        dataset: "s",
         data: "d"
       },
       uri: {
@@ -22,7 +21,7 @@ angular.module('app').constant('path',
         record: function(id) {
           return path.api.sub.record + '/' + (id !== undefined ? id + '/' : '');
         },
-        set: function(id) {
+        dataset: function(id) {
           return path.api.sub.set + '/' + (id !== undefined ? id + '/' : '');
         },
         data: function(id) {
@@ -35,7 +34,7 @@ angular.module('app').constant('path',
         logout: function() { return path.api.join_root(path.api.sub.logout); },
         user: function(id) { return path.api.join_root(path.api.uri.user(id)); }
       },
-      build: function(args) {
+      /*build: function(args) {
         var sub_paths = [];
         if (args.user !== undefined) {
           sub_paths.push(path.api.uri.user(args.user));
@@ -50,7 +49,7 @@ angular.module('app').constant('path',
           }
         }
         return path.api.join_paths_root(sub_paths);
-      },
+      },*/
       join_root: function(sub_path) {
         return path.join(path.api.root, sub_path);
       },
@@ -69,8 +68,7 @@ angular.module('app').constant('path',
       ],
       user: [
         { name: "Dashboard",    route: "root.dash" },
-        { name: "Data",      route: "root.set" },
-        { name: "Records",   route: "root.record" },
+        { name: "Datasets",      route: "root.dataset" },
         { name: "Settings",     route: "root.settings" }
       ]
     },
@@ -142,14 +140,9 @@ angular.module('app').config(
         templateUrl: path.join_root('user/partial/settings/settings.html'),
         data: { auth: 'User' }
       })
-      .state('root.set', {
-        url: '/sets',
-        templateUrl: path.join_root('chart/partial/set/list/list.html'),
-        data: { auth: 'User' }
-      })
-      .state('root.record', {
-        url: '/records',
-        templateUrl: path.join_root('chart/partial/record/list/list.html'),
+      .state('root.dataset', {
+        url: '/datasets',
+        templateUrl: path.join_root('dataset/partial/list/list.html'),
         data: { auth: 'User' }
       });
     $urlRouterProvider.otherwise('/');
