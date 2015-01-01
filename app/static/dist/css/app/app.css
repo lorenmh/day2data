@@ -50,6 +50,18 @@ button.btn, button.btn:active, button.btn:focus {
   background-color: rgb(169, 229, 149);
 }
 
+.inline {
+  display: inline-block;
+}
+
+.d2d-btn-4, .d2d-btn-4:visited, .d2d-btn-4:hover, .d2d-btn-4:active, .d2d-btn-4:focus {
+  padding: 6px 40px;
+  font-size: 20px;
+  font-weight: 700;
+  color: rgb(58, 58, 58);
+  background-color: rgb(229, 149, 149);
+}
+
 .d2d-btn-1 {
   color: #F5F5FF;
 }

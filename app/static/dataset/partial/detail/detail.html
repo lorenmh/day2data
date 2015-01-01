@@ -1,4 +1,32 @@
 <div ng-controller="DatasetDetailCtrl">
-  <h1>Set Detail</h1>
-  {{ test }}
+<style>
+
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .x.axis path {
+    display: none;
+  }
+
+  .line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+
+  </style>
+
+  <div class="ds-detail-wrap" ng-if="dataset">
+    <h1>Datasets/{{ dataset.id }} : {{ dataset.title }}</h1>
+    <button class="btn d2d-btn-4">Record data</button>
+    <h3>{{ dataset.count }} data points</h3>
+    <span>{{ dataset.type }}</span>
+    <span>Created by {{ dataset.user.id }}</span>
+    <span>Created on {{ dataset.time }}</span>
+    <svg class="ds-view" width="1000" height="500"></svg>
+  </div>
 </div>

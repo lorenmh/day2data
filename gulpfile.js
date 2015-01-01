@@ -32,7 +32,6 @@ var lib_paths = {
   "ang-route":  "angular-ui-router/release/angular-ui-router.min.js",
   "ang-util":   "angular-ui-utils/ui-utils.min.js",
   "bs":         "bootstrap/dist/js/bootstrap.min.js",
-  "d3":         "d3/d3.min.js",
   "$":          "jquery/dist/jquery.min.js",
   "less":       "less.js/dist/less.min.js",
   "moment":     "moment/min/moment.min.js"
@@ -55,7 +54,8 @@ var app_paths = {
   "dataset-base":   "dataset/partial/base/base.js",
   "dataset-list":   "dataset/partial/list/list.js",
   "dataset-detail": "dataset/partial/detail/detail.js",
-  "form-user-new":  "user/partial/form/user-new.js"
+  "form-user-new":  "user/partial/form/user-new.js",
+  "d3":             "service/d3.js",
 };
 
 // app_root = barebones stuff
@@ -82,13 +82,13 @@ var app_ang = [
   "dataset-base",
   "dataset-list",
   "dataset-detail",
-  "form-user-new"
+  "form-user-new",
+  "d3"
 ];
 
 var app_lib = [
   "$",
   "bs",
-  "d3",
   "ang-cook",
   "ang-util",
   "ang-bs",

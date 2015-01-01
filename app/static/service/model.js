@@ -9,7 +9,7 @@ angular.module('app').factory('model', [
 
     model.User = $resource('/api/u/:u/', { u: "@uid", r: "@rid", s: "@sid" }, {'query': {isArray: false}});
 
-    model.Dataset = $resource('/api/s/:s/', { u: "@uid", r: "@rid", s: "@sid" });
+    model.Dataset = $resource('/api/s/:dataset_id', { dataset_id: "@dataset_id" });
 
     return model;
 }]);
