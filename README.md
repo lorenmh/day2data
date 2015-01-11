@@ -65,6 +65,8 @@ start the redis server:
 ```sudo redis-server```
 
 start the server:
-```./server```
+```
+./server
+```
 
 everything should be running now
