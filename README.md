@@ -35,7 +35,12 @@ In the parent directory of wherever this repo is install, create a 'vars' direct
 ```mkdir ../vars```
 
 put a d2d.py file in there:
-```touch ../vars/d2d.py```
+```
+touch ../vars/d2d.py
+touch ../__init__.py
+touch ../vars/__init__.py
+
+```
 
 this d2d.py file should have a 'vars' dict with the keys 'DB_URI', 'SECRET', 'SECRET_KEY':
 ```
@@ -62,4 +67,4 @@ start the redis server:
 start the server:
 ```./server```
 
-everything should be running
+everything should be running now
