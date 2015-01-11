@@ -1,2 +1,9 @@
-d2d.py
-- vars { 'DB_URI', 'SECRET_KEY', 'SECRET' }
+In the parent directory, there should be a 'vars' directory, with a 'd2d.py' module in it.
+This module should have a dict named 'vars' with the following keys: 'DB_URI', 'SECRET_KEY', 'SECRET'
+
+in ../vars/d2d.py:
+vars = {
+    'DB_URI': 'postgres://db_role:db_role_password@localhost/db_name',
+    'SECRET_KEY': 'some secret',
+    'SECRET': 'some secret'
+}
