@@ -1,0 +1,18 @@
+<div ng-controller="DataNewCountCtrl">
+  <div class="form-wrap form-data-new-wrap {{ show_form ? 'active' : 'inactive' }}" ng-if="show_form">
+    <button ng-click="toggle_form()" class="form-toggle btn-data-new btn {{ show_form ? 'active' : 'inactive' }}">{{ show_form ? 'hide' : 'Record Count Data' }}</button>
+
+    <form ng-if="show_form" ng-submit="submit()" class="form form-data-new {{ form_errors ? 'errors' }}">
+      <div ng-if="form_errors" class="form-errors">
+        <p class="form-error" ng-repeat="error in form_errors">{{ error }}</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          <span class="form-label-text">Notes:<span class="form-optional">(optional)</span></span>
+          <input ng-model="form_data.text" type="text" class="form-input form-input-text"/>
+        </label>
+      </div>
+      <button type="submit" class="form-submi btn-data-new">submit</button>
+    </form>
+  </div>
+</div>

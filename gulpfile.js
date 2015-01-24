@@ -54,6 +54,8 @@ var app_paths = {
   "dataset-base":   "dataset/partial/base/base.js",
   "dataset-list":   "dataset/partial/list/list.js",
   "dataset-detail": "dataset/partial/detail/detail.js",
+  "dataset-new":    "dataset/partial/form/datasetNew.js",
+  "data-new":       "dataset/partial/form/dataNew.js",
   "form-user-new":  "user/partial/form/user-new.js",
   "d3":             "service/d3.js",
 };
@@ -73,16 +75,18 @@ var app_ang = [
   "home",
   "dash",
   "user",
+  "form-user-new",
   "dataset",
   "settings",
   "user-panel",
   "sidebar",
   "userService",
   "dataService",
+  "dataset-new",
+  "data-new",
   "dataset-base",
   "dataset-list",
   "dataset-detail",
-  "form-user-new",
   "d3"
 ];
 

@@ -1,0 +1,23 @@
+<div ng-controller="DatasetNewCtrl">
+   <button ng-click="toggle_form()" class="sign-up btn d2d-btn-{{ !show_form ? '1' : 'hide' }}">{{ show_form ? 'hide' : 'New Dataset'}}</button>
+
+  <div class="dataset-new-wrap {{ show_form ? 'expanded' : '' }}" ng-if="show_form">
+    <button ng-click="toggle_form()" class="dataset-new btn d2d-btn-{{ show_form ? 'hide' : '2' }}">{{ show_form ? 'Hide' : 'Sign In'}}</button>
+
+    <form ng-if="show_form" ng-submit="submit()" ng-class="{ errors: form_errors }">
+        <div ng-if="form_errors" class="form-errors">
+          <p class="form-error" ng-repeat="error in form_errors">{{ error }}</p>
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="new-user-username">Title:</label>
+          <input ng-model="form_data.title" type="text" class="form-control" id="new-user-username" />
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="new-user-email">Type: (optional)</label>
+          <input ng-model="form_data.data_type" type="text" class="form-control" id="new-user-email" />
+        </div>
+      <button type="submit" class="login submit btn btn-success">submit</button>
+    </form>
+
+  </div>
+</div>

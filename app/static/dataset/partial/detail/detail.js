@@ -2,11 +2,37 @@ angular.module('dataset').controller( 'DatasetDetailCtrl', [
           '$scope', '$stateParams', 'model', 'd3',
   function($scope, $stateParams, model, d3) {
     
-    $scope.dataset = model.Dataset.get({ dataset_id: $stateParams.dataset_id });
+    var dataset_id = $stateParams.dataset_id;
 
-    console.log($scope.dataset);
+    $scope.dataset = model.Dataset.get({ dataset_id: dataset_id });
 
-    window.d3 = d3;
+    console.log(model);
+
+    $scope.record_data = function(form_data, cb) {
+      var new_data, v;
+
+      new_data = new model.Data({ dataset_id: dataset_id });
+
+      form_data = { value: Math.random() * 20 }
+
+      for (v in form_data) {
+        if (form_data.hasOwnProperty(v)) {
+          new_data[v] = form_data[v];
+        }
+      }
+
+      new_data.$save()
+          .then( function(d) {
+            console.log('handle success');
+            $scope.dataset.data.push( d );
+          })
+          .catch( function(d) {
+            console.log('handle error');
+            console.log(d);
+          })
+      ;
+
+    };
 
     $scope.dataset.$promise.then(function(dataset) {
       var svg, width, height, x, y, xAxis, yAxis, line, parse_timestamp, data;
@@ -35,7 +61,7 @@ angular.module('dataset').controller( 'DatasetDetailCtrl', [
           return new Date(d);
         };
 
-        data = dataset.dataset.data;
+        data = dataset.data;
 
         data.forEach(function(d) {
           d.timestamp = parse_timestamp(d.time);
@@ -83,7 +109,7 @@ angular.module('dataset').controller( 'DatasetDetailCtrl', [
             return new Date(d);
           };
 
-          data = dataset.dataset.data;
+          data = dataset.data;
 
           data.forEach(function(d) {
             d.timestamp = parse_timestamp(d.time);
@@ -112,6 +138,7 @@ angular.module('dataset').controller( 'DatasetDetailCtrl', [
             .attr('class', 'line')
             .attr('d', line);
         }
-        console.log('aaaaa')
+
     });
-}]);
+  }
+]);

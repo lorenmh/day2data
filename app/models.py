@@ -9,7 +9,7 @@ VALID_USERNAME_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[a-z-]{3,16}$"
 VALID_UNIT_SHORT_RE = "^[\w\!\(\)\-\+\[\]\,\/\#\$\%\&\*\€\£\.]{,12}$"
 # 1 - 32 chars, valid a-b-c, not -a-b or a-b- or a--b. a b c matches, not a  b
 # matches if false
-VALID_TITLE_RE = "^(?!.*(?:^|[_-])(?:[_-]|$))[\w-]{1,32}$"
+VALID_TITLE_RE = "^(?!.*(?:^|[_\-\ ])(?:[_\-\ ]|$))[\w\-\ ]{1,32}$"
 
 DATA_TYPE_INT = {
     "count": 1,
@@ -484,17 +484,25 @@ class Dataset(db.Model):
     @staticmethod
     def from_values(user, values):
         title, text, data_type, unit, unit_short, choice_keys = values.get('title'), values.get('text'), int(values.get('data_type')), values.get('unit'), values.get('unit_short'), values.get('choice_keys')
+
+        if type(data_type) == str:
+            data_type = DATA_TYPE_INT(data_type)
+
         s = Dataset(user=user.id, title=title, data_type=data_type, text=text, unit=unit, unit_short=unit_short)
+
         s.create()
+        
         if data_type == DATA_TYPE_INT['choice']:
             for key in choice_keys:
                 Choice(dataset=s.id, title=key).create()
         return s
 
-
     @staticmethod
     def validate(values=None):
         errors = {}
+
+        print values
+
         if isinstance(values, dict):
             title, data_type, unit, unit_short = values.get('title'), values.get('data_type'), values.get('unit'), values.get('unit_short')
             if title == None:
@@ -506,7 +514,7 @@ class Dataset(db.Model):
             else:
                 try:
                     data_type = int(data_type)
-                    if data_type not in DATA_TYPE_STR:
+                    if data_type not in DATA_TYPE_STR and data_type not in DATA_TYPE_INT:
                         errors['data_type'] = 'Invalid data type'
                     if data_type == DATA_TYPE_INT['choice']:
                         choice_keys = values.get('choice_keys')

@@ -28,7 +28,7 @@ def dataset(dataset):
     srl = dataset_short(dataset)
     srl["unit"] = dataset.unit
     srl["unit_short"] = dataset.unit_short
-    srl["dataset"] = data_short_for_data_type(dataset)
+    srl["data"] = data_short_for_data_type(dataset)
     return srl
 
 
@@ -112,25 +112,26 @@ def choice_dataset_key(dataset):
 def data_short_for_data_type(dataset):
     key = None
     if dataset.data_type == DATA_TYPE_INT["count"]:
-        data_type = "count"
+        #data_type = "count"
         data_list = [count_data_short(d) for d in dataset.get_data_all()]
     elif dataset.data_type == DATA_TYPE_INT["value"]:
-        data_type = "value"
+        #data_type = "value"
         data_list = [value_data_short(d) for d in dataset.get_data_all()]
     elif dataset.data_type == DATA_TYPE_INT["timed"]:
-        data_type = "timed"
+        #data_type = "timed"
         data_list = [timed_data_short(d) for d in dataset.get_data_all()]
     elif dataset.data_type == DATA_TYPE_INT["choice"]:
-        data_type = "choice"
-        key = choice_dataset_key(dataset)
+        #data_type = "choice"
+        #key = choice_dataset_key(dataset)
         data_list = [choice_data_short(d) for d in dataset.get_data_all()]
     else:
         data_type = None
         data_list = None
-    srl = {
-        "data": data_list,
-        "data_type": data_type
-    }
-    if key != None:
-        srl["key"] = key
-    return srl
+    # srl = {
+    #     "data": data_list,
+    #     "data_type": data_type
+    # }
+    # if key != None:
+    #     srl["key"] = key
+    # return srl
+    return data_list

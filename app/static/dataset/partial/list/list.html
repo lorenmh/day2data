@@ -1,5 +1,6 @@
 <div ng-controller="DatasetListCtrl">
   <h1>Datasets</h1>
+  <ng-include src="'/static/dataset/partial/form/datasetNew.html'"></ng-include>
   <div class="ds-item-wrap" ng-repeat="dataset in datasets" ng-if="datasets">
   <a class="inline" ui-sref="root.dataset.detail({ dataset_id: dataset.id })"><h1>{{ dataset.title }}</h1></a><button class="btn d2d-btn-4 inline">Record data</button>
   <h3>{{ dataset.count }} data points</h3>
